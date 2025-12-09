@@ -54,6 +54,12 @@
                 <button class="tool-btn" data-type="OutputPin">Output Pin</button>
                 <div id="custom-chips-container"></div>
             </div>
+            <div class="component-category">
+                <h3>Boards</h3>
+                <button class="tool-btn" data-type="ProtoSmall">Protoboard S</button>
+                <button class="tool-btn" data-type="ProtoMedium">Protoboard M</button>
+                <button class="tool-btn" data-type="ProtoLarge">Protoboard L</button>
+            </div>
             <div class="controls">
                 <button id="play-btn">Play</button>
                 <button id="pause-btn">Pause</button>
@@ -90,6 +96,21 @@
                 <div id="progress-track">
                     <div class="progress-label">Level Progress</div>
                     <div class="progress-bar"><span id="progress-fill"></span></div>
+                </div>
+                <div id="view-toggle">
+                    <div class="progress-label">View Mode</div>
+                    <div class="segmented">
+                        <button data-mode="real" class="seg-btn active">Real</button>
+                        <button data-mode="wireframe" class="seg-btn">Wireframe</button>
+                    </div>
+                </div>
+                <div id="theme-toggle">
+                    <div class="progress-label">Colorway</div>
+                    <div class="segmented trio">
+                        <button data-theme="neon" class="seg-btn active">Neon</button>
+                        <button data-theme="sunset" class="seg-btn">Sunset</button>
+                        <button data-theme="blueprint" class="seg-btn">Blueprint</button>
+                    </div>
                 </div>
             </div>
             <canvas id="circuit-canvas"></canvas>

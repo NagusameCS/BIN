@@ -7,32 +7,175 @@ export class Wire {
         this.state = false;
     }
 
-    draw(ctx, gridSize, time = 0) {
+    draw(ctx, gridSize, time = 0, mode = 'real') {
         const pulse = (Math.sin(time / 160) + 1) / 2;
         const hue = this.state ? 140 : 210;
-        const glow = this.state ? 12 : 0;
+        const glow = mode === 'real' && this.state ? 12 : 0;
         const grad = ctx.createLinearGradient(this.x1, this.y1, this.x2, this.y2);
         grad.addColorStop(0, this.state ? `hsl(${hue}, 80%, ${30 + pulse * 20}%)` : '#3a3f52');
         grad.addColorStop(1, this.state ? `hsl(${hue + 20}, 80%, ${40 + pulse * 20}%)` : '#2b3044');
 
         ctx.save();
+        // Underlay to make routes readable even when idle
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = mode === 'wireframe' ? 'rgba(122,163,255,0.25)' : 'rgba(255,255,255,0.06)';
+        ctx.beginPath();
+        ctx.moveTo(this.x1, this.y1);
+        ctx.lineTo(this.x2, this.y2);
+        ctx.stroke();
+
         ctx.lineWidth = this.state ? 3 : 2;
-        ctx.strokeStyle = grad;
+        ctx.strokeStyle = mode === 'wireframe' ? '#7aa3ff' : grad;
         ctx.shadowBlur = glow;
-        ctx.shadowColor = this.state ? `hsl(${hue}, 80%, 55%)` : 'transparent';
-        ctx.setLineDash(this.state ? [10, 8] : []);
-        ctx.lineDashOffset = this.state ? -time / 40 : 0;
+        ctx.shadowColor = this.state && mode === 'real' ? `hsl(${hue}, 80%, 55%)` : 'transparent';
+        ctx.setLineDash(this.state && mode === 'real' ? [12, 6] : []);
+        ctx.lineDashOffset = this.state && mode === 'real' ? -time / 32 : 0;
         ctx.beginPath();
         ctx.moveTo(this.x1, this.y1);
         ctx.lineTo(this.x2, this.y2);
         ctx.stroke();
 
         ctx.setLineDash([]);
-        ctx.fillStyle = this.state ? `hsl(${hue}, 80%, 60%)` : '#4a5066';
+        ctx.fillStyle = this.state ? (mode === 'wireframe' ? '#7aa3ff' : `hsl(${hue}, 80%, 60%)`) : '#4a5066';
         ctx.beginPath();
         ctx.arc(this.x1, this.y1, 3, 0, Math.PI * 2);
         ctx.arc(this.x2, this.y2, 3, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
+    }
+}
+
+function drawGateShape(ctx, { w, h, variant, mode, accent = '#6cf29c', active = false, bubble = false, label = '' }) {
+    const stroke = mode === 'wireframe' ? '#7aa3ff' : accent;
+    const fill = mode === 'wireframe' ? 'rgba(0,0,0,0)' : (active ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.04)');
+    ctx.save();
+    ctx.strokeStyle = stroke;
+    ctx.fillStyle = fill;
+    ctx.lineWidth = 2.2;
+    ctx.shadowBlur = active && mode === 'real' ? 12 : 0;
+    ctx.shadowColor = active && mode === 'real' ? accent : 'transparent';
+
+    const halfW = w / 2;
+    const halfH = h / 2;
+
+    const drawAnd = () => {
+        ctx.beginPath();
+        ctx.moveTo(-halfW, -halfH);
+        ctx.lineTo(0, -halfH);
+        ctx.arc(0, 0, halfH, -Math.PI / 2, Math.PI / 2);
+        ctx.lineTo(-halfW, halfH);
+        ctx.closePath();
+    };
+
+    const drawOr = () => {
+        const inset = halfH * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(-halfW + inset, -halfH);
+        ctx.quadraticCurveTo(-halfW, 0, -halfW + inset, halfH);
+        ctx.quadraticCurveTo(halfW, 0, -halfW + inset, -halfH);
+        ctx.closePath();
+    };
+
+    switch (variant) {
+        case 'and':
+            drawAnd();
+            break;
+        case 'or':
+        case 'xor':
+            drawOr();
+            break;
+        default:
+            // Fallback rounded box
+            const radius = 8;
+            ctx.beginPath();
+            ctx.moveTo(-halfW + radius, -halfH);
+            ctx.lineTo(halfW - radius, -halfH);
+            ctx.quadraticCurveTo(halfW, -halfH, halfW, -halfH + radius);
+            ctx.lineTo(halfW, halfH - radius);
+            ctx.quadraticCurveTo(halfW, halfH, halfW - radius, halfH);
+            ctx.lineTo(-halfW + radius, halfH);
+            ctx.quadraticCurveTo(-halfW, halfH, -halfW, halfH - radius);
+            ctx.lineTo(-halfW, -halfH + radius);
+            ctx.quadraticCurveTo(-halfW, -halfH, -halfW + radius, -halfH);
+            ctx.closePath();
+            break;
+    }
+
+    ctx.fill();
+    ctx.stroke();
+
+    if (variant === 'xor') {
+        // Draw the leading OR curve offset for XOR distinction
+        const inset = halfH * 0.6 - 8;
+        ctx.beginPath();
+        ctx.moveTo(-halfW + inset, -halfH);
+        ctx.quadraticCurveTo(-halfW - 6, 0, -halfW + inset, halfH);
+        ctx.stroke();
+    }
+
+    if (bubble) {
+        ctx.beginPath();
+        ctx.arc(halfW, 0, 6, 0, Math.PI * 2);
+        ctx.fillStyle = mode === 'wireframe' ? 'rgba(0,0,0,0)' : '#0c0f1a';
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    if (label) {
+        ctx.fillStyle = mode === 'wireframe' ? '#b7c7ff' : '#e6ecff';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, -w * 0.05, 0);
+    }
+
+    ctx.restore();
+}
+
+export class Protoboard extends Component {
+    constructor(x, y, size = 'medium') {
+        super(x, y, 'Protoboard');
+        const dims = {
+            small: { w: 8, h: 6 },
+            medium: { w: 12, h: 8 },
+            large: { w: 16, h: 10 }
+        }[size] || { w: 12, h: 8 };
+        this.width = dims.w;
+        this.height = dims.h;
+        this.size = size;
+        this.locked = true;
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        const w = this.width * gridSize;
+        const h = this.height * gridSize;
+        const baseColor = mode === 'wireframe' ? '#304066' : '#1c2436';
+        ctx.fillStyle = baseColor;
+        ctx.strokeStyle = mode === 'wireframe' ? '#5ad1ff' : 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 2;
+        ctx.fillRect(-w / 2, -h / 2, w, h);
+        ctx.strokeRect(-w / 2, -h / 2, w, h);
+
+        // Draw holes grid
+        const cols = Math.floor(this.width * 5);
+        const rows = Math.floor(this.height * 4);
+        ctx.fillStyle = mode === 'wireframe' ? '#7aa3ff' : '#0f1626';
+        for (let i = 0; i < cols; i++) {
+            for (let j = 0; j < rows; j++) {
+                const px = -w / 2 + (i + 0.5) * (w / cols);
+                const py = -h / 2 + (j + 0.5) * (h / rows);
+                ctx.beginPath();
+                ctx.arc(px, py, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        // Label size
+        ctx.fillStyle = mode === 'wireframe' ? '#b7c7ff' : 'rgba(255,255,255,0.6)';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.size.toUpperCase(), 0, h / 2 - 12);
         ctx.restore();
     }
 }
@@ -83,7 +226,10 @@ export class Component {
     }
 
     resetInputs() {
-        // Reset internal input states
+        // Default reset: set known inputs to false if properties exist
+        if (this.inputs) {
+            this.inputs.forEach(inp => this.setInput(inp.id, false));
+        }
     }
 
     compute() {
@@ -94,12 +240,17 @@ export class Component {
         // For interactive components
     }
 
-    draw(ctx, gridSize) {
+    draw(ctx, gridSize, mode = 'real') {
         // Generic box draw
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = this.locked ? 'rgba(255,255,255,0.06)' : '#333';
-        ctx.strokeStyle = this.locked ? 'rgba(108,242,156,0.6)' : '#fff';
+        if (mode === 'wireframe') {
+            ctx.fillStyle = 'rgba(0,0,0,0)';
+            ctx.strokeStyle = this.locked ? 'rgba(108,242,156,0.6)' : '#7aa3ff';
+        } else {
+            ctx.fillStyle = this.locked ? 'rgba(255,255,255,0.06)' : '#333';
+            ctx.strokeStyle = this.locked ? 'rgba(108,242,156,0.6)' : '#fff';
+        }
         ctx.lineWidth = this.locked ? 2.5 : 2;
         const w = this.width * gridSize;
         const h = this.height * gridSize;
@@ -107,33 +258,39 @@ export class Component {
         ctx.strokeRect(-w / 2, -h / 2, w, h);
 
         // Draw text
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = mode === 'wireframe' ? '#b7c7ff' : '#fff';
         ctx.font = '10px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.type, 0, 0);
 
         // Draw pins
-        this.drawPins(ctx, gridSize);
+        this.drawPins(ctx, gridSize, mode);
 
         ctx.restore();
     }
 
-    drawPins(ctx, gridSize) {
+    drawPins(ctx, gridSize, mode = 'real') {
         // Inputs
-        ctx.fillStyle = '#00f';
+        ctx.lineWidth = 1.6;
         this.inputs.forEach(p => {
             ctx.beginPath();
-            ctx.arc(p.x * gridSize, p.y * gridSize, 3, 0, Math.PI * 2);
+            ctx.arc(p.x * gridSize, p.y * gridSize, 4, 0, Math.PI * 2);
+            ctx.fillStyle = mode === 'wireframe' ? '#7aa3ff' : '#6ac8ff';
+            ctx.strokeStyle = mode === 'wireframe' ? 'rgba(122,163,255,0.6)' : 'rgba(255,255,255,0.25)';
             ctx.fill();
+            ctx.stroke();
         });
 
         // Outputs
-        ctx.fillStyle = '#f00';
         this.outputs.forEach(p => {
+            const active = !!p.value;
             ctx.beginPath();
-            ctx.arc(p.x * gridSize, p.y * gridSize, 3, 0, Math.PI * 2);
+            ctx.arc(p.x * gridSize, p.y * gridSize, 4, 0, Math.PI * 2);
+            ctx.fillStyle = active ? (mode === 'wireframe' ? '#7cffb7' : '#6cf29c') : (mode === 'wireframe' ? '#5a6a8a' : '#4a5066');
+            ctx.strokeStyle = mode === 'wireframe' ? 'rgba(124,255,183,0.45)' : 'rgba(255,255,255,0.2)';
             ctx.fill();
+            ctx.stroke();
         });
     }
 }
@@ -148,12 +305,12 @@ export class VCC extends Component {
         this.outputs = [{ x: 0, y: 0.5, value: true }];
     }
 
-    draw(ctx, gridSize) {
+    draw(ctx, gridSize, mode = 'real') {
         ctx.save();
         ctx.translate(this.x, this.y);
 
         // Draw VCC symbol
-        ctx.strokeStyle = '#fff';
+        ctx.strokeStyle = mode === 'wireframe' ? '#7aa3ff' : '#fff';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -165,7 +322,7 @@ export class VCC extends Component {
         ctx.lineTo(10, -5);
         ctx.stroke();
 
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = mode === 'wireframe' ? '#b7c7ff' : '#fff';
         ctx.font = '10px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('5V', 0, -15);
@@ -182,12 +339,12 @@ export class GND extends Component {
         this.outputs = [{ x: 0, y: -0.5, value: false }];
     }
 
-    draw(ctx, gridSize) {
+    draw(ctx, gridSize, mode = 'real') {
         ctx.save();
         ctx.translate(this.x, this.y);
 
         // Draw GND symbol
-        ctx.strokeStyle = '#fff';
+        ctx.strokeStyle = mode === 'wireframe' ? '#7aa3ff' : '#fff';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -220,6 +377,10 @@ export class Clock extends Component {
         const halfCycle = Math.floor(this.frequency / 2);
         this.outputs[0].value = (tickCount % this.frequency) < halfCycle;
     }
+
+    resetInputs() {
+        // No inputs to reset
+    }
 }
 
 // --- Inputs ---
@@ -239,11 +400,11 @@ export class Switch extends Component {
         this.outputs[0].value = this.isOn;
     }
 
-    draw(ctx, gridSize) {
-        super.draw(ctx, gridSize);
+    draw(ctx, gridSize, mode = 'real') {
+        super.draw(ctx, gridSize, mode);
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = this.isOn ? '#0f0' : '#555';
+        ctx.fillStyle = mode === 'wireframe' ? (this.isOn ? '#7cffb7' : 'rgba(0,0,0,0)') : (this.isOn ? '#0f0' : '#555');
         ctx.fillRect(-5, -5, 10, 10);
         ctx.restore();
     }
@@ -270,11 +431,11 @@ export class Button extends Component {
         }, 200);
     }
 
-    draw(ctx, gridSize) {
-        super.draw(ctx, gridSize);
+    draw(ctx, gridSize, mode = 'real') {
+        super.draw(ctx, gridSize, mode);
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = this.isPressed ? '#f00' : '#800';
+        ctx.fillStyle = mode === 'wireframe' ? (this.isPressed ? '#ff8fb1' : 'rgba(0,0,0,0)') : (this.isPressed ? '#f00' : '#800');
         ctx.beginPath();
         ctx.arc(0, 0, 8, 0, Math.PI * 2);
         ctx.fill();
@@ -297,19 +458,26 @@ export class LED extends Component {
         if (id === 'in') this.isOn = value;
     }
 
-    draw(ctx, gridSize) {
+    draw(ctx, gridSize, mode = 'real') {
         ctx.save();
         ctx.translate(this.x, this.y);
-        const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, 10);
-        grad.addColorStop(0, this.isOn ? '#ff8fb1' : '#2a1a26');
-        grad.addColorStop(1, this.isOn ? '#ff2e63' : '#120910');
-        ctx.fillStyle = grad;
-        ctx.shadowBlur = this.isOn ? 18 : 0;
-        ctx.shadowColor = this.isOn ? '#ff8fb1' : 'transparent';
-        ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI * 2);
-        ctx.fill();
-
+        if (mode === 'wireframe') {
+            ctx.strokeStyle = this.isOn ? '#ff8fb1' : '#7aa3ff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.stroke();
+        } else {
+            const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, 10);
+            grad.addColorStop(0, this.isOn ? '#ff8fb1' : '#2a1a26');
+            grad.addColorStop(1, this.isOn ? '#ff2e63' : '#120910');
+            ctx.fillStyle = grad;
+            ctx.shadowBlur = this.isOn ? 18 : 0;
+            ctx.shadowColor = this.isOn ? '#ff8fb1' : 'transparent';
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
         ctx.restore();
     }
 }
@@ -336,14 +504,21 @@ export class Display extends Component {
         if (id === 'val') this.value = value;
     }
 
-    draw(ctx, gridSize) {
-        super.draw(ctx, gridSize);
+    resetInputs() {
+        this.value = false;
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        super.draw(ctx, gridSize, mode);
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = '#000';
+        ctx.fillStyle = mode === 'wireframe' ? 'rgba(0,0,0,0)' : '#000';
+        ctx.strokeStyle = mode === 'wireframe' ? '#7aa3ff' : 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 2;
         ctx.fillRect(-20, -30, 40, 60);
+        ctx.strokeRect(-20, -30, 40, 60);
 
-        ctx.fillStyle = this.value ? '#0f0' : '#111';
+        ctx.fillStyle = this.value ? (mode === 'wireframe' ? '#7cffb7' : '#0f0') : (mode === 'wireframe' ? '#4f5b75' : '#111');
         ctx.font = '40px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -377,6 +552,27 @@ export class ANDGate extends Component {
     compute() {
         this.outputs[0].value = this.inA && this.inB;
     }
+
+    resetInputs() {
+        this.inA = false;
+        this.inB = false;
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        drawGateShape(ctx, {
+            w: this.width * gridSize,
+            h: this.height * gridSize,
+            variant: 'and',
+            mode,
+            accent: '#6cf29c',
+            active: !!this.outputs[0].value,
+            label: '&'
+        });
+        this.drawPins(ctx, gridSize, mode);
+        ctx.restore();
+    }
 }
 
 export class ORGate extends Component {
@@ -401,6 +597,27 @@ export class ORGate extends Component {
     compute() {
         this.outputs[0].value = this.inA || this.inB;
     }
+
+    resetInputs() {
+        this.inA = false;
+        this.inB = false;
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        drawGateShape(ctx, {
+            w: this.width * gridSize,
+            h: this.height * gridSize,
+            variant: 'or',
+            mode,
+            accent: '#6ac8ff',
+            active: !!this.outputs[0].value,
+            label: '>=1'
+        });
+        this.drawPins(ctx, gridSize, mode);
+        ctx.restore();
+    }
 }
 
 export class NOTGate extends Component {
@@ -421,9 +638,42 @@ export class NOTGate extends Component {
         this.outputs[0].value = !this.inA;
     }
 
-    draw(ctx, gridSize) {
-        // Custom triangle shape
-        super.draw(ctx, gridSize);
+    draw(ctx, gridSize, mode = 'real') {
+        const active = !!this.outputs[0].value;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.strokeStyle = mode === 'wireframe' ? '#7aa3ff' : '#ff8fb1';
+        ctx.fillStyle = mode === 'wireframe' ? 'rgba(0,0,0,0)' : (active ? 'rgba(255,143,177,0.12)' : '#1b1b24');
+        ctx.lineWidth = 2.2;
+        ctx.shadowBlur = active && mode === 'real' ? 10 : 0;
+        ctx.shadowColor = active && mode === 'real' ? '#ff8fb1' : 'transparent';
+
+        ctx.beginPath();
+        ctx.moveTo(-12, -12);
+        ctx.lineTo(12, 0);
+        ctx.lineTo(-12, 12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(15, 0, 4, 0, Math.PI * 2);
+        ctx.fillStyle = mode === 'wireframe' ? '#7aa3ff' : '#ff8fb1';
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = mode === 'wireframe' ? '#b7c7ff' : '#e6ecff';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('NOT', -2, 0);
+
+        this.drawPins(ctx, gridSize, mode);
+        ctx.restore();
+    }
+
+    resetInputs() {
+        this.inA = false;
     }
 }
 
@@ -449,6 +699,28 @@ export class NANDGate extends Component {
     compute() {
         this.outputs[0].value = !(this.inA && this.inB);
     }
+
+    resetInputs() {
+        this.inA = false;
+        this.inB = false;
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        drawGateShape(ctx, {
+            w: this.width * gridSize,
+            h: this.height * gridSize,
+            variant: 'and',
+            mode,
+            accent: '#6cf29c',
+            active: !!this.outputs[0].value,
+            bubble: true,
+            label: '!&'
+        });
+        this.drawPins(ctx, gridSize, mode);
+        ctx.restore();
+    }
 }
 
 export class NORGate extends Component {
@@ -472,6 +744,28 @@ export class NORGate extends Component {
 
     compute() {
         this.outputs[0].value = !(this.inA || this.inB);
+    }
+
+    resetInputs() {
+        this.inA = false;
+        this.inB = false;
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        drawGateShape(ctx, {
+            w: this.width * gridSize,
+            h: this.height * gridSize,
+            variant: 'or',
+            mode,
+            accent: '#ffb347',
+            active: !!this.outputs[0].value,
+            bubble: true,
+            label: '!>=1'
+        });
+        this.drawPins(ctx, gridSize, mode);
+        ctx.restore();
     }
 }
 
@@ -497,6 +791,27 @@ export class XORGate extends Component {
     compute() {
         this.outputs[0].value = (this.inA !== this.inB);
     }
+
+    resetInputs() {
+        this.inA = false;
+        this.inB = false;
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        drawGateShape(ctx, {
+            w: this.width * gridSize,
+            h: this.height * gridSize,
+            variant: 'xor',
+            mode,
+            accent: '#c58bff',
+            active: !!this.outputs[0].value,
+            label: '^'
+        });
+        this.drawPins(ctx, gridSize, mode);
+        ctx.restore();
+    }
 }
 
 export class XNORGate extends Component {
@@ -521,6 +836,28 @@ export class XNORGate extends Component {
     compute() {
         this.outputs[0].value = (this.inA === this.inB);
     }
+
+    resetInputs() {
+        this.inA = false;
+        this.inB = false;
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        drawGateShape(ctx, {
+            w: this.width * gridSize,
+            h: this.height * gridSize,
+            variant: 'xor',
+            mode,
+            accent: '#c58bff',
+            active: !!this.outputs[0].value,
+            bubble: true,
+            label: '=='
+        });
+        this.drawPins(ctx, gridSize, mode);
+        ctx.restore();
+    }
 }
 
 export class InputPin extends Component {
@@ -538,11 +875,19 @@ export class InputPin extends Component {
         this.outputs[0].value = val;
     }
 
-    draw(ctx, gridSize) {
-        super.draw(ctx, gridSize);
+    compute() {
+        this.outputs[0].value = this.value;
+    }
+
+    resetInputs() {
+        // Input pins keep their value; no-op
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        super.draw(ctx, gridSize, mode);
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = '#a8ffcf';
+        ctx.fillStyle = mode === 'wireframe' ? '#7aa3ff' : '#a8ffcf';
         ctx.font = '10px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(this.label || 'IN', 0, 0);
@@ -564,11 +909,15 @@ export class OutputPin extends Component {
         this.value = value;
     }
 
-    draw(ctx, gridSize) {
-        super.draw(ctx, gridSize);
+    resetInputs() {
+        this.value = false;
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        super.draw(ctx, gridSize, mode);
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = this.value ? '#ff8fb1' : '#c7d3ff';
+        ctx.fillStyle = this.value ? '#ff8fb1' : (mode === 'wireframe' ? '#b7c7ff' : '#c7d3ff');
         ctx.font = '10px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(this.label || 'OUT', 0, 0);
@@ -661,12 +1010,16 @@ export class Chip extends Component {
         });
     }
 
-    draw(ctx, gridSize) {
-        super.draw(ctx, gridSize);
+    resetInputs() {
+        this.inputPins.forEach(pin => pin.setValue(false));
+    }
+
+    draw(ctx, gridSize, mode = 'real') {
+        super.draw(ctx, gridSize, mode);
         // Draw label
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = mode === 'wireframe' ? '#b7c7ff' : '#fff';
         ctx.font = '12px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(this.type, 0, 0);

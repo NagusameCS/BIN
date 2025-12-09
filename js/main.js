@@ -31,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const puzzleStatus = document.getElementById('puzzle-status');
     const progressFill = document.getElementById('progress-fill');
     const dailyBadge = document.getElementById('daily-badge');
+    const viewButtons = document.querySelectorAll('#view-toggle .seg-btn');
+    const themeButtons = document.querySelectorAll('#theme-toggle .seg-btn');
 
     function showToast(message, tone = 'info') {
         toastEl.textContent = message;
@@ -48,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         puzzleTitle.textContent = activePuzzle.title;
         puzzleDesc.textContent = activePuzzle.description;
         puzzleDay.textContent = `Day ${puzzleManager.dayIndex}`;
-        puzzleLevel.textContent = `Level ${index + 1}`;
+        puzzleLevel.textContent = `Level ${index + 1} · ${activePuzzle.difficulty}`;
         truthTableEl.textContent = puzzleManager.formatTruthTable(activePuzzle);
         puzzleStatus.textContent = activePuzzle.hint;
         dailyBadge.textContent = `Daily Generator · ${puzzleManager.dayIndex}`;
@@ -154,6 +156,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const next = Math.min(currentLevelIndex + 1, puzzleManager.puzzles.length - 1);
         renderPuzzle(next);
         showToast(`Level ${next + 1} loaded`);
+    });
+
+    viewButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            viewButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const mode = btn.dataset.mode;
+            engine.setRenderMode(mode);
+        });
+    });
+
+    themeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            themeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const theme = btn.dataset.theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            showToast(`Theme: ${theme}`);
+        });
     });
 
     // Start the engine loop

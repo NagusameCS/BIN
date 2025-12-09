@@ -7,6 +7,7 @@ export class Engine {
         this.simulation = simulation;
         this.gridSize = 20;
         this.currentTool = 'Select';
+        this.renderMode = 'real';
 
         this.isDragging = false;
         this.dragStart = { x: 0, y: 0 };
@@ -22,6 +23,11 @@ export class Engine {
     setTool(tool) {
         this.currentTool = tool;
         this.wireStart = null; // Reset wire creation if tool changes
+    }
+
+    setRenderMode(mode) {
+        this.renderMode = mode === 'wireframe' ? 'wireframe' : 'real';
+        this.draw();
     }
 
     setupEvents() {
@@ -119,11 +125,26 @@ export class Engine {
         const height = this.canvas.height;
 
         // Clear
-        ctx.fillStyle = '#1e1e1e';
-        ctx.fillRect(0, 0, width, height);
+        if (this.renderMode === 'wireframe') {
+            ctx.fillStyle = '#0b0f1f';
+            ctx.fillRect(0, 0, width, height);
+        } else {
+            const bg = ctx.createLinearGradient(0, 0, width, height);
+            bg.addColorStop(0, '#0c0f1a');
+            bg.addColorStop(1, '#121a2c');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, width, height);
+
+            // Subtle spotlight to guide the build area
+            const radial = ctx.createRadialGradient(width * 0.45, height * 0.45, 60, width * 0.45, height * 0.45, width * 0.7);
+            radial.addColorStop(0, 'rgba(108,242,156,0.07)');
+            radial.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = radial;
+            ctx.fillRect(0, 0, width, height);
+        }
 
         // Draw Grid
-        ctx.strokeStyle = '#2a2a2a';
+        ctx.strokeStyle = this.renderMode === 'wireframe' ? '#30354a' : '#262c3b';
         ctx.lineWidth = 1;
         ctx.beginPath();
         for (let x = 0; x <= width; x += this.gridSize) {
@@ -136,13 +157,28 @@ export class Engine {
         }
         ctx.stroke();
 
+        // Major gridlines every 5 units for easier placement
+        ctx.strokeStyle = this.renderMode === 'wireframe' ? 'rgba(122,163,255,0.35)' : 'rgba(108,242,156,0.15)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        const majorStep = this.gridSize * 5;
+        for (let x = 0; x <= width; x += majorStep) {
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, height);
+        }
+        for (let y = 0; y <= height; y += majorStep) {
+            ctx.moveTo(0, y);
+            ctx.lineTo(width, y);
+        }
+        ctx.stroke();
+
         // Draw Wires
         const now = performance.now();
-        this.simulation.wires.forEach(wire => wire.draw(ctx, this.gridSize, now));
+        this.simulation.wires.forEach(wire => wire.draw(ctx, this.gridSize, now, this.renderMode));
 
         // Draw temp wire
         if (this.wireStart && this.tempWireEnd) {
-            ctx.strokeStyle = '#888';
+            ctx.strokeStyle = this.renderMode === 'wireframe' ? '#7aa3ff' : '#888';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(this.wireStart.x, this.wireStart.y);
@@ -151,13 +187,13 @@ export class Engine {
         }
 
         // Draw Components
-        this.simulation.components.forEach(comp => comp.draw(ctx, this.gridSize));
+        this.simulation.components.forEach(comp => comp.draw(ctx, this.gridSize, this.renderMode));
 
         // Draw ghost component if placing
         if (this.currentTool !== 'Select' && this.currentTool !== 'Wire' && this.currentTool !== 'Delete') {
             ctx.globalAlpha = 0.5;
             // Simple ghost representation
-            ctx.fillStyle = '#6cf29c';
+            ctx.fillStyle = this.renderMode === 'wireframe' ? 'rgba(150,180,255,0.6)' : '#6cf29c';
             ctx.fillRect(this.lastMouse.x - 10, this.lastMouse.y - 10, 20, 20);
             ctx.globalAlpha = 1.0;
         }

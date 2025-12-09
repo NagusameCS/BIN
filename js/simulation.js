@@ -6,7 +6,8 @@ import {
     NANDGate, NORGate, XORGate, XNORGate,
     InputPin, OutputPin,
     Chip,
-    Wire
+    Wire,
+    Protoboard
 } from './components.js';
 
 export class Simulation {
@@ -30,6 +31,9 @@ export class Simulation {
 
         let comp;
         switch (type) {
+            case 'ProtoSmall': comp = new Protoboard(x, y, 'small'); break;
+            case 'ProtoMedium': comp = new Protoboard(x, y, 'medium'); break;
+            case 'ProtoLarge': comp = new Protoboard(x, y, 'large'); break;
             case 'VCC': comp = new VCC(x, y); break;
             case 'GND': comp = new GND(x, y); break;
             case 'Clock': comp = new Clock(x, y); break;
