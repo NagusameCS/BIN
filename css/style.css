@@ -13,9 +13,12 @@
     --shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 }
 
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
-body, html {
+body,
+html {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -24,9 +27,9 @@ body, html {
     overflow: hidden;
     color: var(--text);
     background: radial-gradient(circle at 20% 20%, rgba(108, 242, 156, 0.08), transparent 22%),
-                radial-gradient(circle at 80% 0%, rgba(106, 200, 255, 0.09), transparent 25%),
-                radial-gradient(circle at 50% 80%, rgba(255, 91, 107, 0.08), transparent 30%),
-                var(--bg);
+        radial-gradient(circle at 80% 0%, rgba(106, 200, 255, 0.09), transparent 25%),
+        radial-gradient(circle at 50% 80%, rgba(255, 91, 107, 0.08), transparent 30%),
+        var(--bg);
 }
 
 #app {
@@ -92,7 +95,7 @@ body, html {
     width: 100%;
     padding: 9px 10px;
     margin-bottom: 6px;
-    background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
     border: 1px solid var(--border);
     color: var(--text);
     cursor: pointer;
@@ -133,19 +136,33 @@ body, html {
     transition: background 0.2s, border 0.2s;
 }
 
-.controls button:hover { background: rgba(255, 255, 255, 0.1); }
+.controls button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
 
-#play-btn { background: linear-gradient(90deg, #1dd1a1, #10ac84); }
-#pause-btn { background: linear-gradient(90deg, #ffb347, #ff9f1a); }
-#clear-btn { background: linear-gradient(90deg, #ff6b6b, #ee5253); grid-column: span 2; }
-#step-btn { background: linear-gradient(90deg, #6ac8ff, #2e86de); }
+#play-btn {
+    background: linear-gradient(90deg, #1dd1a1, #10ac84);
+}
+
+#pause-btn {
+    background: linear-gradient(90deg, #ffb347, #ff9f1a);
+}
+
+#clear-btn {
+    background: linear-gradient(90deg, #ff6b6b, #ee5253);
+    grid-column: span 2;
+}
+
+#step-btn {
+    background: linear-gradient(90deg, #6ac8ff, #2e86de);
+}
 
 #canvas-container {
     flex-grow: 1;
     position: relative;
     background: radial-gradient(circle at 20% 30%, rgba(106, 200, 255, 0.08), transparent 30%),
-                radial-gradient(circle at 70% 60%, rgba(108, 242, 156, 0.07), transparent 35%),
-                #0b0e18;
+        radial-gradient(circle at 70% 60%, rgba(108, 242, 156, 0.07), transparent 35%),
+        #0b0e18;
     overflow: hidden;
     cursor: crosshair;
 }
@@ -159,7 +176,7 @@ body, html {
     align-items: center;
     justify-content: space-between;
     padding: 12px 14px;
-    background: rgba(0,0,0,0.35);
+    background: rgba(0, 0, 0, 0.35);
     border: 1px solid var(--border);
     border-radius: 12px;
     backdrop-filter: blur(6px);
@@ -190,13 +207,17 @@ body, html {
     width: 260px;
 }
 
-.progress-label { color: var(--muted); font-size: 0.85rem; margin-bottom: 4px; }
+.progress-label {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+}
 
 .progress-bar {
     width: 100%;
     height: 10px;
     border-radius: 999px;
-    background: rgba(255,255,255,0.08);
+    background: rgba(255, 255, 255, 0.08);
     overflow: hidden;
     border: 1px solid var(--border);
 }
@@ -245,7 +266,7 @@ canvas {
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 8px;
-    background: rgba(0,0,0,0.25);
+    background: rgba(0, 0, 0, 0.25);
     margin-bottom: 10px;
     line-height: 1.4;
     white-space: pre;
@@ -262,13 +283,16 @@ canvas {
     padding: 8px;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: rgba(255,255,255,0.04);
+    background: rgba(255, 255, 255, 0.04);
     color: var(--text);
     cursor: pointer;
     transition: background 0.2s, border 0.2s;
 }
 
-.puzzle-actions button:hover { background: rgba(108, 242, 156, 0.12); border-color: rgba(108, 242, 156, 0.35); }
+.puzzle-actions button:hover {
+    background: rgba(108, 242, 156, 0.12);
+    border-color: rgba(108, 242, 156, 0.35);
+}
 
 #puzzle-status {
     margin-top: 8px;

@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.height = container.clientHeight;
         engine.draw();
     }
-    
+
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toolBtns.forEach(b => b.classList.remove('active'));
             // Add to clicked
             btn.classList.add('active');
-            
+
             const type = btn.dataset.type;
             engine.setTool(type);
         });
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('save-btn').addEventListener('click', () => {
         const json = simulation.toJSON();
-        const blob = new Blob([json], {type: 'application/json'});
+        const blob = new Blob([json], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('create-chip-btn').addEventListener('click', () => {
         const name = prompt("Enter chip name:");
         if (!name) return;
-        
+
         const def = simulation.createChip(name);
         if (def) {
             const container = document.getElementById('custom-chips-container');
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPuzzle(next);
         showToast(`Level ${next + 1} loaded`);
     });
-    
+
     // Start the engine loop
     engine.start();
 

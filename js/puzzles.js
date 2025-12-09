@@ -75,7 +75,7 @@ function generatePuzzle(seed, level = 1) {
             desc: 'At least two inputs HIGH should make OUT HIGH.',
             inputs: ['A', 'B', 'C'],
             outputs: ['OUT'],
-            makeTable: () => buildTruthTable(['A', 'B', 'C'], ['OUT'], ({ A, B, C }) => ({ OUT: ((A?1:0)+(B?1:0)+(C?1:0)) >= 2 }))
+            makeTable: () => buildTruthTable(['A', 'B', 'C'], ['OUT'], ({ A, B, C }) => ({ OUT: ((A ? 1 : 0) + (B ? 1 : 0) + (C ? 1 : 0)) >= 2 }))
         },
         {
             type: 'parity',
@@ -83,7 +83,7 @@ function generatePuzzle(seed, level = 1) {
             desc: 'OUT should be HIGH when an odd number of inputs are HIGH.',
             inputs: ['D0', 'D1', 'D2'],
             outputs: ['PAR'],
-            makeTable: () => buildTruthTable(['D0', 'D1', 'D2'], ['PAR'], ({ D0, D1, D2 }) => ({ PAR: !!((D0?1:0) ^ (D1?1:0) ^ (D2?1:0)) }))
+            makeTable: () => buildTruthTable(['D0', 'D1', 'D2'], ['PAR'], ({ D0, D1, D2 }) => ({ PAR: !!((D0 ? 1 : 0) ^ (D1 ? 1 : 0) ^ (D2 ? 1 : 0)) }))
         },
         {
             type: 'dual-output',

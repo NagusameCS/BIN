@@ -7,11 +7,11 @@ export class Engine {
         this.simulation = simulation;
         this.gridSize = 20;
         this.currentTool = 'Select';
-        
+
         this.isDragging = false;
         this.dragStart = { x: 0, y: 0 };
         this.lastMouse = { x: 0, y: 0 };
-        
+
         // Wire creation state
         this.wireStart = null;
         this.tempWireEnd = null;
@@ -45,7 +45,7 @@ export class Engine {
 
     handleMouseDown(e) {
         const pos = this.getGridPos(e);
-        
+
         if (this.currentTool === 'Select') {
             // Check if clicked on a component
             const clickedComponent = this.simulation.findComponentAt(pos.x, pos.y);
@@ -69,7 +69,7 @@ export class Engine {
             // Place component
             this.simulation.addComponent(this.currentTool, pos.x, pos.y);
         }
-        
+
         this.draw();
     }
 
@@ -98,7 +98,7 @@ export class Engine {
             this.wireStart = null;
             this.tempWireEnd = null;
         }
-        
+
         this.draw();
     }
 
@@ -152,7 +152,7 @@ export class Engine {
 
         // Draw Components
         this.simulation.components.forEach(comp => comp.draw(ctx, this.gridSize));
-        
+
         // Draw ghost component if placing
         if (this.currentTool !== 'Select' && this.currentTool !== 'Wire' && this.currentTool !== 'Delete') {
             ctx.globalAlpha = 0.5;

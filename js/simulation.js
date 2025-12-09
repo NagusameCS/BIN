@@ -1,12 +1,12 @@
-import { 
-    VCC, GND, Clock, 
-    Switch, Button, 
-    LED, Display, 
+import {
+    VCC, GND, Clock,
+    Switch, Button,
+    LED, Display,
     ANDGate, ORGate, NOTGate,
     NANDGate, NORGate, XORGate, XNORGate,
     InputPin, OutputPin,
     Chip,
-    Wire 
+    Wire
 } from './components.js';
 
 export class Simulation {
@@ -71,12 +71,12 @@ export class Simulation {
                 this.components.splice(compIdx, 1);
             }
         }
-        
+
         // Remove wires (check endpoints)
         this.wires = this.wires.filter(w => {
             return !this.isPointNearLine(x, y, w.x1, w.y1, w.x2, w.y2);
         });
-        
+
         this.update();
     }
 
@@ -84,23 +84,23 @@ export class Simulation {
         // Find inputs and outputs
         const inputs = this.components.filter(c => c.type === 'InputPin');
         const outputs = this.components.filter(c => c.type === 'OutputPin');
-        
+
         if (inputs.length === 0 && outputs.length === 0) {
             alert("Chip must have at least one input or output pin.");
             return null;
         }
-        
+
         // Create definition
         // We need to normalize coordinates so the chip content is centered or top-left based.
         // But for simplicity, we just save relative to a bounding box?
         // Or just save as is and when simulating, we map inputs/outputs.
-        
+
         // We need to assign IDs to pins if they don't have them unique enough.
         // Let's assume user placed them.
         // We'll use their current position as ID or just index.
         inputs.forEach((p, i) => p.id = `in_${i}`);
         outputs.forEach((p, i) => p.id = `out_${i}`);
-        
+
         const definition = {
             name: name,
             inputs: inputs.map(p => ({ id: p.id, label: p.label })),
@@ -118,16 +118,16 @@ export class Simulation {
                 x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2
             }))
         };
-        
+
         this.customChips.set(name, definition);
         return definition;
     }
-    
+
     isPointNearLine(px, py, x1, y1, x2, y2) {
         const d = Math.abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1) / Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
         // Check if point is within the segment bounds
         const withinBounds = px >= Math.min(x1, x2) - 5 && px <= Math.max(x1, x2) + 5 &&
-                             py >= Math.min(y1, y2) - 5 && py <= Math.max(y1, y2) + 5;
+            py >= Math.min(y1, y2) - 5 && py <= Math.max(y1, y2) + 5;
         return d < 5 && withinBounds;
     }
 
@@ -210,7 +210,7 @@ export class Simulation {
 
     tick() {
         this.tickCount++;
-        
+
         // Update clocks and other time-dependent components
         this.components.forEach(c => {
             if (c.update) c.update(this.tickCount);
@@ -218,7 +218,7 @@ export class Simulation {
 
         this.updateLogic();
     }
-    
+
     // Force an update without advancing time (for editing)
     update() {
         this.updateLogic();
@@ -231,10 +231,10 @@ export class Simulation {
     static evaluate(components, wires) {
         // 1. Reset all nodes/wires to floating (null) or default
         components.forEach(c => c.resetInputs());
-        
+
         // 2. Apply sources (VCC, GND, Active Outputs)
         let activeNodes = [];
-        
+
         components.forEach(c => {
             // If component is a Chip, we need to evaluate it first?
             // Or Chip.compute() handles its internal logic.
@@ -244,13 +244,13 @@ export class Simulation {
             // But Chip outputs might drive other components.
             // This implies a need for multiple passes or event-driven simulation.
             // For now, we assume 1 tick delay for chips is fine, or we do multiple passes.
-            
+
             const outputs = c.getOutputs();
             outputs.forEach(out => {
                 activeNodes.push({ x: out.x, y: out.y, value: out.value });
             });
         });
-        
+
         // Propagate through wires
         const adj = new Map();
         const addEdge = (p1, p2) => {
@@ -261,18 +261,18 @@ export class Simulation {
             adj.get(k1).push(k2);
             adj.get(k2).push(k1);
         };
-        
+
         wires.forEach(w => {
-            addEdge({x: w.x1, y: w.y1}, {x: w.x2, y: w.y2});
+            addEdge({ x: w.x1, y: w.y1 }, { x: w.x2, y: w.y2 });
         });
-        
+
         const nodeValues = new Map(); // "x,y" -> boolean
         const queue = [...activeNodes];
-        
+
         while (queue.length > 0) {
             const { x, y, value } = queue.shift();
             const key = `${x},${y}`;
-            
+
             if (nodeValues.has(key)) {
                 const currentVal = nodeValues.get(key);
                 if (currentVal !== value && value === true) {
@@ -280,9 +280,9 @@ export class Simulation {
                 }
                 continue;
             }
-            
+
             nodeValues.set(key, value);
-            
+
             const neighbors = adj.get(key) || [];
             neighbors.forEach(nKey => {
                 if (!nodeValues.has(nKey)) {
@@ -291,7 +291,7 @@ export class Simulation {
                 }
             });
         }
-        
+
         // 3. Update component inputs based on grid values
         components.forEach(c => {
             const inputs = c.getInputs();
@@ -303,13 +303,13 @@ export class Simulation {
                     c.setInput(inp.id, false);
                 }
             });
-            
+
             // If it's a Chip, we need to pass the evaluator to it so it can simulate internals
             if (c.type === 'Chip' || c instanceof Chip) {
                 // We need to map inputs to internal InputPins
                 // Then evaluate internal circuit
                 // Then map internal OutputPins to outputs
-                
+
                 // Map inputs
                 c.inputPins.forEach(pin => {
                     // Find the input on the chip that corresponds to this pin
@@ -318,7 +318,7 @@ export class Simulation {
                     // c.setInput updates internal state?
                     // We need to implement Chip.setInput to update the internal InputPin.
                 });
-                
+
                 // Actually, Chip.setInput should handle this.
                 // But Chip needs to run evaluate on its internals.
                 // We can call a method on Chip here.
@@ -326,10 +326,10 @@ export class Simulation {
                     c.evaluateInternal(Simulation.evaluate);
                 }
             }
-            
-            c.compute(); 
+
+            c.compute();
         });
-        
+
         // Update wire colors
         wires.forEach(w => {
             const k1 = `${w.x1},${w.y1}`;
@@ -367,8 +367,8 @@ export class Simulation {
                         comp.isOn = c.state.isOn;
                         // Update visual state if needed
                         if (comp.toggle && typeof comp.toggle === 'function' && comp.isOn !== (comp.outputs[0]?.value)) {
-                             // Force update output
-                             if(comp.outputs[0]) comp.outputs[0].value = comp.isOn;
+                            // Force update output
+                            if (comp.outputs[0]) comp.outputs[0].value = comp.isOn;
                         }
                     }
                 });

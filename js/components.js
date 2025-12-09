@@ -59,7 +59,7 @@ export class Component {
         const halfW = (this.width * 20) / 2;
         const halfH = (this.height * 20) / 2;
         return x >= this.x - halfW && x <= this.x + halfW &&
-               y >= this.y - halfH && y <= this.y + halfH;
+            y >= this.y - halfH && y <= this.y + halfH;
     }
 
     getInputs() {
@@ -81,7 +81,7 @@ export class Component {
     setInput(id, value) {
         // To be implemented by subclasses or generic handler
     }
-    
+
     resetInputs() {
         // Reset internal input states
     }
@@ -89,7 +89,7 @@ export class Component {
     compute() {
         // Update outputs based on inputs
     }
-    
+
     toggle() {
         // For interactive components
     }
@@ -103,36 +103,36 @@ export class Component {
         ctx.lineWidth = this.locked ? 2.5 : 2;
         const w = this.width * gridSize;
         const h = this.height * gridSize;
-        ctx.fillRect(-w/2, -h/2, w, h);
-        ctx.strokeRect(-w/2, -h/2, w, h);
-        
+        ctx.fillRect(-w / 2, -h / 2, w, h);
+        ctx.strokeRect(-w / 2, -h / 2, w, h);
+
         // Draw text
         ctx.fillStyle = '#fff';
         ctx.font = '10px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.type, 0, 0);
-        
+
         // Draw pins
         this.drawPins(ctx, gridSize);
-        
+
         ctx.restore();
     }
-    
+
     drawPins(ctx, gridSize) {
         // Inputs
         ctx.fillStyle = '#00f';
         this.inputs.forEach(p => {
             ctx.beginPath();
-            ctx.arc(p.x * gridSize, p.y * gridSize, 3, 0, Math.PI*2);
+            ctx.arc(p.x * gridSize, p.y * gridSize, 3, 0, Math.PI * 2);
             ctx.fill();
         });
-        
+
         // Outputs
         ctx.fillStyle = '#f00';
         this.outputs.forEach(p => {
             ctx.beginPath();
-            ctx.arc(p.x * gridSize, p.y * gridSize, 3, 0, Math.PI*2);
+            ctx.arc(p.x * gridSize, p.y * gridSize, 3, 0, Math.PI * 2);
             ctx.fill();
         });
     }
@@ -145,13 +145,13 @@ export class VCC extends Component {
         super(x, y, 'VCC');
         this.width = 1;
         this.height = 1;
-        this.outputs = [{x: 0, y: 0.5, value: true}];
+        this.outputs = [{ x: 0, y: 0.5, value: true }];
     }
-    
+
     draw(ctx, gridSize) {
         ctx.save();
         ctx.translate(this.x, this.y);
-        
+
         // Draw VCC symbol
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
@@ -159,17 +159,17 @@ export class VCC extends Component {
         ctx.moveTo(0, 0);
         ctx.lineTo(0, 10); // Pin down
         ctx.stroke();
-        
+
         ctx.beginPath();
         ctx.moveTo(-10, -5);
         ctx.lineTo(10, -5);
         ctx.stroke();
-        
+
         ctx.fillStyle = '#fff';
         ctx.font = '10px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('5V', 0, -15);
-        
+
         ctx.restore();
     }
 }
@@ -179,13 +179,13 @@ export class GND extends Component {
         super(x, y, 'GND');
         this.width = 1;
         this.height = 1;
-        this.outputs = [{x: 0, y: -0.5, value: false}];
+        this.outputs = [{ x: 0, y: -0.5, value: false }];
     }
-    
+
     draw(ctx, gridSize) {
         ctx.save();
         ctx.translate(this.x, this.y);
-        
+
         // Draw GND symbol
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
@@ -193,7 +193,7 @@ export class GND extends Component {
         ctx.moveTo(0, 0);
         ctx.lineTo(0, -10); // Pin up
         ctx.stroke();
-        
+
         ctx.beginPath();
         ctx.moveTo(-10, 0);
         ctx.lineTo(10, 0);
@@ -202,7 +202,7 @@ export class GND extends Component {
         ctx.moveTo(-2, 8);
         ctx.lineTo(2, 8);
         ctx.stroke();
-        
+
         ctx.restore();
     }
 }
@@ -212,10 +212,10 @@ export class Clock extends Component {
         super(x, y, 'Clock');
         this.width = 2;
         this.height = 2;
-        this.outputs = [{x: 1, y: 0, value: false}];
+        this.outputs = [{ x: 1, y: 0, value: false }];
         this.frequency = 10; // ticks per cycle
     }
-    
+
     update(tickCount) {
         const halfCycle = Math.floor(this.frequency / 2);
         this.outputs[0].value = (tickCount % this.frequency) < halfCycle;
@@ -229,16 +229,16 @@ export class Switch extends Component {
         super(x, y, 'Switch');
         this.width = 2;
         this.height = 1;
-        this.outputs = [{x: 1, y: 0, value: false}];
+        this.outputs = [{ x: 1, y: 0, value: false }];
         this.isInteractive = true;
         this.isOn = false;
     }
-    
+
     toggle() {
         this.isOn = !this.isOn;
         this.outputs[0].value = this.isOn;
     }
-    
+
     draw(ctx, gridSize) {
         super.draw(ctx, gridSize);
         ctx.save();
@@ -254,11 +254,11 @@ export class Button extends Component {
         super(x, y, 'Button');
         this.width = 2;
         this.height = 2;
-        this.outputs = [{x: 1, y: 0, value: false}];
+        this.outputs = [{ x: 1, y: 0, value: false }];
         this.isInteractive = true;
         this.isPressed = false;
     }
-    
+
     toggle() {
         // Momentary - this logic needs to be handled by mouse down/up in engine really
         // For now, let's make it toggle for simplicity or use a timeout
@@ -269,14 +269,14 @@ export class Button extends Component {
             this.outputs[0].value = false;
         }, 200);
     }
-    
+
     draw(ctx, gridSize) {
         super.draw(ctx, gridSize);
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.fillStyle = this.isPressed ? '#f00' : '#800';
         ctx.beginPath();
-        ctx.arc(0, 0, 8, 0, Math.PI*2);
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     }
@@ -289,14 +289,14 @@ export class LED extends Component {
         super(x, y, 'LED');
         this.width = 1;
         this.height = 1;
-        this.inputs = [{x: 0, y: 0.5, id: 'in'}];
+        this.inputs = [{ x: 0, y: 0.5, id: 'in' }];
         this.isOn = false;
     }
-    
+
     setInput(id, value) {
         if (id === 'in') this.isOn = value;
     }
-    
+
     draw(ctx, gridSize) {
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -307,9 +307,9 @@ export class LED extends Component {
         ctx.shadowBlur = this.isOn ? 18 : 0;
         ctx.shadowColor = this.isOn ? '#ff8fb1' : 'transparent';
         ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI*2);
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
         ctx.fill();
-        
+
         ctx.restore();
     }
 }
@@ -321,34 +321,34 @@ export class Display extends Component {
         this.height = 4;
         // 7 segment inputs: a,b,c,d,e,f,g
         this.inputs = [
-            {x: -1.5, y: -1.5, id: 'a'},
-            {x: -1.5, y: -0.5, id: 'b'},
-            {x: -1.5, y: 0.5, id: 'c'},
-            {x: -1.5, y: 1.5, id: 'd'},
+            { x: -1.5, y: -1.5, id: 'a' },
+            { x: -1.5, y: -0.5, id: 'b' },
+            { x: -1.5, y: 0.5, id: 'c' },
+            { x: -1.5, y: 1.5, id: 'd' },
             // Simplified: just one input for now to show on/off or maybe 4 bit hex later
             // Let's do a simple 1-bit display for now
-            {x: -1.5, y: 0, id: 'val'}
+            { x: -1.5, y: 0, id: 'val' }
         ];
         this.value = false;
     }
-    
+
     setInput(id, value) {
         if (id === 'val') this.value = value;
     }
-    
+
     draw(ctx, gridSize) {
         super.draw(ctx, gridSize);
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.fillStyle = '#000';
         ctx.fillRect(-20, -30, 40, 60);
-        
+
         ctx.fillStyle = this.value ? '#0f0' : '#111';
         ctx.font = '40px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.value ? '1' : '0', 0, 0);
-        
+
         ctx.restore();
     }
 }
@@ -361,19 +361,19 @@ export class ANDGate extends Component {
         this.width = 3;
         this.height = 2;
         this.inputs = [
-            {x: -1.5, y: -0.5, id: 'a'},
-            {x: -1.5, y: 0.5, id: 'b'}
+            { x: -1.5, y: -0.5, id: 'a' },
+            { x: -1.5, y: 0.5, id: 'b' }
         ];
-        this.outputs = [{x: 1.5, y: 0, value: false}];
+        this.outputs = [{ x: 1.5, y: 0, value: false }];
         this.inA = false;
         this.inB = false;
     }
-    
+
     setInput(id, value) {
         if (id === 'a') this.inA = value;
         if (id === 'b') this.inB = value;
     }
-    
+
     compute() {
         this.outputs[0].value = this.inA && this.inB;
     }
@@ -385,19 +385,19 @@ export class ORGate extends Component {
         this.width = 3;
         this.height = 2;
         this.inputs = [
-            {x: -1.5, y: -0.5, id: 'a'},
-            {x: -1.5, y: 0.5, id: 'b'}
+            { x: -1.5, y: -0.5, id: 'a' },
+            { x: -1.5, y: 0.5, id: 'b' }
         ];
-        this.outputs = [{x: 1.5, y: 0, value: false}];
+        this.outputs = [{ x: 1.5, y: 0, value: false }];
         this.inA = false;
         this.inB = false;
     }
-    
+
     setInput(id, value) {
         if (id === 'a') this.inA = value;
         if (id === 'b') this.inB = value;
     }
-    
+
     compute() {
         this.outputs[0].value = this.inA || this.inB;
     }
@@ -408,19 +408,19 @@ export class NOTGate extends Component {
         super(x, y, 'NOT');
         this.width = 2;
         this.height = 1;
-        this.inputs = [{x: -1, y: 0, id: 'a'}];
-        this.outputs = [{x: 1, y: 0, value: true}];
+        this.inputs = [{ x: -1, y: 0, id: 'a' }];
+        this.outputs = [{ x: 1, y: 0, value: true }];
         this.inA = false;
     }
-    
+
     setInput(id, value) {
         if (id === 'a') this.inA = value;
     }
-    
+
     compute() {
         this.outputs[0].value = !this.inA;
     }
-    
+
     draw(ctx, gridSize) {
         // Custom triangle shape
         super.draw(ctx, gridSize);
@@ -433,19 +433,19 @@ export class NANDGate extends Component {
         this.width = 3;
         this.height = 2;
         this.inputs = [
-            {x: -1.5, y: -0.5, id: 'a'},
-            {x: -1.5, y: 0.5, id: 'b'}
+            { x: -1.5, y: -0.5, id: 'a' },
+            { x: -1.5, y: 0.5, id: 'b' }
         ];
-        this.outputs = [{x: 1.5, y: 0, value: true}];
+        this.outputs = [{ x: 1.5, y: 0, value: true }];
         this.inA = false;
         this.inB = false;
     }
-    
+
     setInput(id, value) {
         if (id === 'a') this.inA = value;
         if (id === 'b') this.inB = value;
     }
-    
+
     compute() {
         this.outputs[0].value = !(this.inA && this.inB);
     }
@@ -457,19 +457,19 @@ export class NORGate extends Component {
         this.width = 3;
         this.height = 2;
         this.inputs = [
-            {x: -1.5, y: -0.5, id: 'a'},
-            {x: -1.5, y: 0.5, id: 'b'}
+            { x: -1.5, y: -0.5, id: 'a' },
+            { x: -1.5, y: 0.5, id: 'b' }
         ];
-        this.outputs = [{x: 1.5, y: 0, value: true}];
+        this.outputs = [{ x: 1.5, y: 0, value: true }];
         this.inA = false;
         this.inB = false;
     }
-    
+
     setInput(id, value) {
         if (id === 'a') this.inA = value;
         if (id === 'b') this.inB = value;
     }
-    
+
     compute() {
         this.outputs[0].value = !(this.inA || this.inB);
     }
@@ -481,19 +481,19 @@ export class XORGate extends Component {
         this.width = 3;
         this.height = 2;
         this.inputs = [
-            {x: -1.5, y: -0.5, id: 'a'},
-            {x: -1.5, y: 0.5, id: 'b'}
+            { x: -1.5, y: -0.5, id: 'a' },
+            { x: -1.5, y: 0.5, id: 'b' }
         ];
-        this.outputs = [{x: 1.5, y: 0, value: false}];
+        this.outputs = [{ x: 1.5, y: 0, value: false }];
         this.inA = false;
         this.inB = false;
     }
-    
+
     setInput(id, value) {
         if (id === 'a') this.inA = value;
         if (id === 'b') this.inB = value;
     }
-    
+
     compute() {
         this.outputs[0].value = (this.inA !== this.inB);
     }
@@ -505,19 +505,19 @@ export class XNORGate extends Component {
         this.width = 3;
         this.height = 2;
         this.inputs = [
-            {x: -1.5, y: -0.5, id: 'a'},
-            {x: -1.5, y: 0.5, id: 'b'}
+            { x: -1.5, y: -0.5, id: 'a' },
+            { x: -1.5, y: 0.5, id: 'b' }
         ];
-        this.outputs = [{x: 1.5, y: 0, value: true}];
+        this.outputs = [{ x: 1.5, y: 0, value: true }];
         this.inA = false;
         this.inB = false;
     }
-    
+
     setInput(id, value) {
         if (id === 'a') this.inA = value;
         if (id === 'b') this.inB = value;
     }
-    
+
     compute() {
         this.outputs[0].value = (this.inA === this.inB);
     }
@@ -528,16 +528,16 @@ export class InputPin extends Component {
         super(x, y, 'InputPin');
         this.width = 1;
         this.height = 1;
-        this.outputs = [{x: 0.5, y: 0, value: false}];
+        this.outputs = [{ x: 0.5, y: 0, value: false }];
         this.label = 'In';
         this.value = false;
     }
-    
+
     setValue(val) {
         this.value = val;
         this.outputs[0].value = val;
     }
-    
+
     draw(ctx, gridSize) {
         super.draw(ctx, gridSize);
         ctx.save();
@@ -555,15 +555,15 @@ export class OutputPin extends Component {
         super(x, y, 'OutputPin');
         this.width = 1;
         this.height = 1;
-        this.inputs = [{x: -0.5, y: 0, id: 'in'}];
+        this.inputs = [{ x: -0.5, y: 0, id: 'in' }];
         this.label = 'Out';
         this.value = false;
     }
-    
+
     setInput(id, value) {
         this.value = value;
     }
-    
+
     draw(ctx, gridSize) {
         super.draw(ctx, gridSize);
         ctx.save();
@@ -580,32 +580,32 @@ export class Chip extends Component {
     constructor(x, y, definition) {
         super(x, y, definition.name);
         this.definition = definition;
-        
+
         const inputCount = definition.inputs.length;
         const outputCount = definition.outputs.length;
         const maxPins = Math.max(inputCount, outputCount);
-        
+
         this.width = 4;
         this.height = Math.max(2, maxPins + 1);
-        
+
         // Setup pins
         this.inputs = definition.inputs.map((pin, i) => ({
-            x: -this.width/2, 
-            y: -this.height/2 + 1 + i, 
-            id: pin.id 
+            x: -this.width / 2,
+            y: -this.height / 2 + 1 + i,
+            id: pin.id
         }));
-        
+
         this.outputs = definition.outputs.map((pin, i) => ({
-            x: this.width/2, 
-            y: -this.height/2 + 1 + i, 
+            x: this.width / 2,
+            y: -this.height / 2 + 1 + i,
             value: false,
-            id: pin.id 
+            id: pin.id
         }));
-        
+
         // Re-instantiate internal components
         this.internalComponents = definition.components.map(c => {
             let comp;
-            switch(c.type) {
+            switch (c.type) {
                 case 'VCC': comp = new VCC(c.x, c.y); break;
                 case 'GND': comp = new GND(c.x, c.y); break;
                 case 'Clock': comp = new Clock(c.x, c.y); break;
@@ -622,36 +622,36 @@ export class Chip extends Component {
                 case 'XNOR': comp = new XNORGate(c.x, c.y); break;
                 case 'InputPin': comp = new InputPin(c.x, c.y); comp.id = c.id; break;
                 case 'OutputPin': comp = new OutputPin(c.x, c.y); comp.id = c.id; break;
-                case 'Chip': 
+                case 'Chip':
                     if (c.definition) comp = new Chip(c.x, c.y, c.definition);
                     break;
             }
             return comp;
         }).filter(c => c);
-        
+
         this.internalWires = definition.wires.map(w => new Wire(w.x1, w.y1, w.x2, w.y2));
-        
+
         this.inputPins = this.internalComponents.filter(c => c.type === 'InputPin');
         this.outputPins = this.internalComponents.filter(c => c.type === 'OutputPin');
     }
-    
+
     setInput(id, value) {
         const pin = this.inputPins.find(p => p.id === id);
         if (pin) {
             pin.setValue(value);
         }
     }
-    
+
     update(tickCount) {
         this.internalComponents.forEach(c => {
             if (c.update) c.update(tickCount);
         });
     }
-    
+
     evaluateInternal(evaluator) {
         evaluator(this.internalComponents, this.internalWires);
     }
-    
+
     compute() {
         this.outputs.forEach(out => {
             const pin = this.outputPins.find(p => p.id === out.id);
@@ -660,7 +660,7 @@ export class Chip extends Component {
             }
         });
     }
-    
+
     draw(ctx, gridSize) {
         super.draw(ctx, gridSize);
         // Draw label
