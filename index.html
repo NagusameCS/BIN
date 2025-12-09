@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuit Simulator Game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <div id="toolbar">
+            <h2>Components</h2>
+            <div class="component-category">
+                <h3>Sources</h3>
+                <button class="tool-btn" data-type="VCC">VCC</button>
+                <button class="tool-btn" data-type="GND">GND</button>
+                <button class="tool-btn" data-type="Clock">Clock</button>
+            </div>
+            <div class="component-category">
+                <h3>Input</h3>
+                <button class="tool-btn" data-type="Switch">Switch</button>
+                <button class="tool-btn" data-type="Button">Button</button>
+            </div>
+            <div class="component-category">
+                <h3>Output</h3>
+                <button class="tool-btn" data-type="LED">LED</button>
+                <button class="tool-btn" data-type="Display">Display</button>
+            </div>
+            <div class="component-category">
+                <h3>Gates</h3>
+                <button class="tool-btn" data-type="AND">AND</button>
+                <button class="tool-btn" data-type="OR">OR</button>
+                <button class="tool-btn" data-type="NOT">NOT</button>
+                <button class="tool-btn" data-type="NAND">NAND</button>
+                <button class="tool-btn" data-type="NOR">NOR</button>
+                <button class="tool-btn" data-type="XOR">XOR</button>
+                <button class="tool-btn" data-type="XNOR">XNOR</button>
+            </div>
+            <div class="component-category">
+                <h3>Tools</h3>
+                <button class="tool-btn active" data-type="Select">Select</button>
+                <button class="tool-btn" data-type="Wire">Wire</button>
+                <button class="tool-btn" data-type="Delete">Delete</button>
+            </div>
+            <div class="component-category">
+                <h3>Custom</h3>
+                <button class="tool-btn" data-type="InputPin">Input Pin</button>
+                <button class="tool-btn" data-type="OutputPin">Output Pin</button>
+                <div id="custom-chips-container"></div>
+            </div>
+            <div class="controls">
+                <button id="play-btn">Play</button>
+                <button id="pause-btn">Pause</button>
+                <button id="step-btn">Step</button>
+                <button id="create-chip-btn" style="width: 100%; background-color: #9C27B0;">Create Chip</button>
+                <button id="clear-btn">Clear All</button>
+                <button id="save-btn">Save</button>
+                <button id="load-btn">Load</button>
+            </div>
+        </div>
+        <div id="canvas-container">
+            <canvas id="circuit-canvas"></canvas>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

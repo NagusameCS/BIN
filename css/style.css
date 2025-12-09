@@ -1,0 +1,107 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    background-color: #222;
+    color: #eee;
+}
+
+#app {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+#toolbar {
+    width: 250px;
+    background-color: #333;
+    border-right: 1px solid #444;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    overflow-y: auto;
+    user-select: none;
+}
+
+#toolbar h2 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    text-align: center;
+    color: #4CAF50;
+}
+
+.component-category {
+    margin-bottom: 15px;
+}
+
+.component-category h3 {
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 2px;
+}
+
+.tool-btn {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 5px;
+    background-color: #444;
+    border: 1px solid #555;
+    color: #ddd;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.tool-btn:hover {
+    background-color: #555;
+}
+
+.tool-btn.active {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #45a049;
+}
+
+.controls {
+    margin-top: auto;
+    border-top: 1px solid #555;
+    padding-top: 10px;
+}
+
+.controls button {
+    width: 48%;
+    margin-bottom: 5px;
+    padding: 5px;
+    background-color: #555;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.controls button:hover {
+    background-color: #666;
+}
+
+#play-btn { background-color: #2196F3; }
+#pause-btn { background-color: #FF9800; }
+#clear-btn { background-color: #f44336; width: 100%; }
+
+#canvas-container {
+    flex-grow: 1;
+    position: relative;
+    background-color: #1e1e1e;
+    overflow: hidden;
+    cursor: crosshair;
+}
+
+canvas {
+    display: block;
+}
