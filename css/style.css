@@ -1,12 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+
+:root {
+    --bg: #0c0f1a;
+    --panel: rgba(18, 22, 35, 0.92);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #e6ecff;
+    --muted: #8fa3c9;
+    --accent: #6cf29c;
+    --accent-2: #6ac8ff;
+    --danger: #ff5b6b;
+    --warning: #ffb347;
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+* { box-sizing: border-box; }
+
 body, html {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Space Grotesk', 'Segoe UI', Tahoma, sans-serif;
     overflow: hidden;
-    background-color: #222;
-    color: #eee;
+    color: var(--text);
+    background: radial-gradient(circle at 20% 20%, rgba(108, 242, 156, 0.08), transparent 22%),
+                radial-gradient(circle at 80% 0%, rgba(106, 200, 255, 0.09), transparent 25%),
+                radial-gradient(circle at 50% 80%, rgba(255, 91, 107, 0.08), transparent 30%),
+                var(--bg);
 }
 
 #app {
@@ -16,92 +36,263 @@ body, html {
 }
 
 #toolbar {
-    width: 250px;
-    background-color: #333;
-    border-right: 1px solid #444;
+    width: 280px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    padding: 10px;
+    padding: 14px;
     overflow-y: auto;
     user-select: none;
+    backdrop-filter: blur(6px);
+    box-shadow: var(--shadow);
+}
+
+#brand {
+    padding: 6px 2px 14px 2px;
+    border-bottom: 1px solid var(--border);
+}
+
+#brand .title {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-size: 1.2rem;
+}
+
+#brand .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
 }
 
 #toolbar h2 {
-    margin-top: 0;
-    font-size: 1.2rem;
-    text-align: center;
-    color: #4CAF50;
+    margin: 10px 0 6px;
+    font-size: 1.1rem;
+    color: var(--accent);
+    letter-spacing: 0.04em;
 }
 
 .component-category {
-    margin-bottom: 15px;
+    margin-bottom: 16px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .component-category h3 {
-    font-size: 0.9rem;
-    color: #aaa;
-    margin-bottom: 5px;
-    border-bottom: 1px solid #444;
-    padding-bottom: 2px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0 0 8px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .tool-btn {
     display: block;
     width: 100%;
-    padding: 8px;
-    margin-bottom: 5px;
-    background-color: #444;
-    border: 1px solid #555;
-    color: #ddd;
+    padding: 9px 10px;
+    margin-bottom: 6px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border: 1px solid var(--border);
+    color: var(--text);
     cursor: pointer;
     text-align: left;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    border-radius: 8px;
+    transition: background 0.2s, border 0.2s, transform 0.1s;
 }
 
 .tool-btn:hover {
-    background-color: #555;
+    background: rgba(108, 242, 156, 0.08);
+    border-color: rgba(108, 242, 156, 0.35);
+    transform: translateY(-1px);
 }
 
 .tool-btn.active {
-    background-color: #4CAF50;
-    color: white;
-    border-color: #45a049;
+    background: linear-gradient(90deg, rgba(108, 242, 156, 0.2), rgba(106, 200, 255, 0.2));
+    color: #0c0f1a;
+    border-color: rgba(108, 242, 156, 0.6);
+    font-weight: 700;
 }
 
 .controls {
     margin-top: auto;
-    border-top: 1px solid #555;
-    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
 }
 
 .controls button {
-    width: 48%;
-    margin-bottom: 5px;
-    padding: 5px;
-    background-color: #555;
-    border: none;
-    color: white;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    color: var(--text);
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: 8px;
+    transition: background 0.2s, border 0.2s;
 }
 
-.controls button:hover {
-    background-color: #666;
-}
+.controls button:hover { background: rgba(255, 255, 255, 0.1); }
 
-#play-btn { background-color: #2196F3; }
-#pause-btn { background-color: #FF9800; }
-#clear-btn { background-color: #f44336; width: 100%; }
+#play-btn { background: linear-gradient(90deg, #1dd1a1, #10ac84); }
+#pause-btn { background: linear-gradient(90deg, #ffb347, #ff9f1a); }
+#clear-btn { background: linear-gradient(90deg, #ff6b6b, #ee5253); grid-column: span 2; }
+#step-btn { background: linear-gradient(90deg, #6ac8ff, #2e86de); }
 
 #canvas-container {
     flex-grow: 1;
     position: relative;
-    background-color: #1e1e1e;
+    background: radial-gradient(circle at 20% 30%, rgba(106, 200, 255, 0.08), transparent 30%),
+                radial-gradient(circle at 70% 60%, rgba(108, 242, 156, 0.07), transparent 35%),
+                #0b0e18;
     overflow: hidden;
     cursor: crosshair;
 }
 
+#hud {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+    z-index: 5;
+    box-shadow: var(--shadow);
+}
+
+#hud-title {
+    font-size: 1rem;
+    color: var(--muted);
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(108, 242, 156, 0.25), rgba(106, 200, 255, 0.25));
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+#progress-track {
+    width: 260px;
+}
+
+.progress-label { color: var(--muted); font-size: 0.85rem; margin-bottom: 4px; }
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.progress-bar span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #6cf29c, #6ac8ff);
+    transition: width 0.3s ease;
+}
+
 canvas {
     display: block;
+}
+
+#puzzle-panel {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+}
+
+#puzzle-meta {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+#puzzle-title {
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+#puzzle-desc {
+    margin: 0 0 8px 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+#truth-table {
+    font-family: 'Space Grotesk', monospace;
+    font-size: 0.9rem;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    background: rgba(0,0,0,0.25);
+    margin-bottom: 10px;
+    line-height: 1.4;
+    white-space: pre;
+}
+
+.puzzle-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.puzzle-actions button {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.2s, border 0.2s;
+}
+
+.puzzle-actions button:hover { background: rgba(108, 242, 156, 0.12); border-color: rgba(108, 242, 156, 0.35); }
+
+#puzzle-status {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+#toast {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--text);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    z-index: 6;
+}
+
+#toast.show {
+    opacity: 1;
+    transform: translate(-50%, -4px);
 }

@@ -7,20 +7,33 @@ export class Wire {
         this.state = false;
     }
 
-    draw(ctx, gridSize) {
-        ctx.strokeStyle = this.state ? '#0f0' : '#555';
-        ctx.lineWidth = 2;
+    draw(ctx, gridSize, time = 0) {
+        const pulse = (Math.sin(time / 160) + 1) / 2;
+        const hue = this.state ? 140 : 210;
+        const glow = this.state ? 12 : 0;
+        const grad = ctx.createLinearGradient(this.x1, this.y1, this.x2, this.y2);
+        grad.addColorStop(0, this.state ? `hsl(${hue}, 80%, ${30 + pulse * 20}%)` : '#3a3f52');
+        grad.addColorStop(1, this.state ? `hsl(${hue + 20}, 80%, ${40 + pulse * 20}%)` : '#2b3044');
+
+        ctx.save();
+        ctx.lineWidth = this.state ? 3 : 2;
+        ctx.strokeStyle = grad;
+        ctx.shadowBlur = glow;
+        ctx.shadowColor = this.state ? `hsl(${hue}, 80%, 55%)` : 'transparent';
+        ctx.setLineDash(this.state ? [10, 8] : []);
+        ctx.lineDashOffset = this.state ? -time / 40 : 0;
         ctx.beginPath();
         ctx.moveTo(this.x1, this.y1);
         ctx.lineTo(this.x2, this.y2);
         ctx.stroke();
-        
-        // Draw connection points
-        ctx.fillStyle = this.state ? '#0f0' : '#555';
+
+        ctx.setLineDash([]);
+        ctx.fillStyle = this.state ? `hsl(${hue}, 80%, 60%)` : '#4a5066';
         ctx.beginPath();
         ctx.arc(this.x1, this.y1, 3, 0, Math.PI * 2);
         ctx.arc(this.x2, this.y2, 3, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
     }
 }
 
@@ -36,6 +49,7 @@ export class Component {
         this.outputs = []; // Array of {x, y (relative), value}
         this.state = {};
         this.isInteractive = false;
+        this.locked = false;
     }
 
     hitTest(x, y) {
@@ -84,9 +98,9 @@ export class Component {
         // Generic box draw
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = '#333';
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
+        ctx.fillStyle = this.locked ? 'rgba(255,255,255,0.06)' : '#333';
+        ctx.strokeStyle = this.locked ? 'rgba(108,242,156,0.6)' : '#fff';
+        ctx.lineWidth = this.locked ? 2.5 : 2;
         const w = this.width * gridSize;
         const h = this.height * gridSize;
         ctx.fillRect(-w/2, -h/2, w, h);
@@ -286,12 +300,14 @@ export class LED extends Component {
     draw(ctx, gridSize) {
         ctx.save();
         ctx.translate(this.x, this.y);
-        
-        ctx.fillStyle = this.isOn ? '#f00' : '#300';
-        ctx.shadowBlur = this.isOn ? 10 : 0;
-        ctx.shadowColor = '#f00';
+        const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, 10);
+        grad.addColorStop(0, this.isOn ? '#ff8fb1' : '#2a1a26');
+        grad.addColorStop(1, this.isOn ? '#ff2e63' : '#120910');
+        ctx.fillStyle = grad;
+        ctx.shadowBlur = this.isOn ? 18 : 0;
+        ctx.shadowColor = this.isOn ? '#ff8fb1' : 'transparent';
         ctx.beginPath();
-        ctx.arc(0, 0, 8, 0, Math.PI*2);
+        ctx.arc(0, 0, 10, 0, Math.PI*2);
         ctx.fill();
         
         ctx.restore();
@@ -526,9 +542,10 @@ export class InputPin extends Component {
         super.draw(ctx, gridSize);
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = '#aaa';
+        ctx.fillStyle = '#a8ffcf';
         ctx.font = '10px Arial';
-        ctx.fillText('IN', 0, 0);
+        ctx.textAlign = 'center';
+        ctx.fillText(this.label || 'IN', 0, 0);
         ctx.restore();
     }
 }
@@ -551,9 +568,10 @@ export class OutputPin extends Component {
         super.draw(ctx, gridSize);
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = '#aaa';
+        ctx.fillStyle = this.value ? '#ff8fb1' : '#c7d3ff';
         ctx.font = '10px Arial';
-        ctx.fillText('OUT', 0, 0);
+        ctx.textAlign = 'center';
+        ctx.fillText(this.label || 'OUT', 0, 0);
         ctx.restore();
     }
 }

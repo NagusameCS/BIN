@@ -16,6 +16,7 @@ export class Simulation {
         this.isRunning = false;
         this.tickCount = 0;
         this.customChips = new Map();
+        this.currentPuzzle = null;
     }
 
     addComponent(type, x, y) {
@@ -62,18 +63,17 @@ export class Simulation {
     }
 
     removeAt(x, y) {
-        // Remove components
+        // Remove components unless locked
         const compIdx = this.components.findIndex(c => c.hitTest(x, y));
         if (compIdx !== -1) {
-            this.components.splice(compIdx, 1);
+            const target = this.components[compIdx];
+            if (!target.locked) {
+                this.components.splice(compIdx, 1);
+            }
         }
         
         // Remove wires (check endpoints)
-        // Simple wire removal: if click is near a wire. 
-        // For now, let's just check endpoints or midpoints roughly.
-        // This is a basic implementation.
         this.wires = this.wires.filter(w => {
-            // Check distance to segment
             return !this.isPointNearLine(x, y, w.x1, w.y1, w.x2, w.y2);
         });
         
@@ -147,6 +147,65 @@ export class Simulation {
         this.components = [];
         this.wires = [];
         this.tickCount = 0;
+        this.currentPuzzle = null;
+    }
+
+    loadPuzzle(puzzle) {
+        this.clear();
+        this.currentPuzzle = puzzle;
+        const baseXLeft = 140;
+        const baseXRight = 760;
+        const spacing = 90;
+        const startY = 160;
+
+        puzzle.inputs.forEach((name, idx) => {
+            const pin = new InputPin(baseXLeft, startY + idx * spacing);
+            pin.id = name;
+            pin.label = name;
+            pin.locked = true;
+            this.components.push(pin);
+        });
+
+        puzzle.outputs.forEach((name, idx) => {
+            const pin = new OutputPin(baseXRight, startY + idx * spacing);
+            pin.id = name;
+            pin.label = name;
+            pin.locked = true;
+            this.components.push(pin);
+        });
+
+        // Add faint guide wires to hint spacing
+        this.wires.push(new Wire(baseXLeft, startY, baseXLeft + 60, startY));
+        this.update();
+    }
+
+    setPinValue(id, value) {
+        const pin = this.components.find(c => c instanceof InputPin && c.id === id);
+        if (pin) pin.setValue(value);
+    }
+
+    getOutputValue(id) {
+        const pin = this.components.find(c => c instanceof OutputPin && c.id === id);
+        return pin ? !!pin.value : false;
+    }
+
+    checkTruthTable(puzzle) {
+        if (!puzzle) return false;
+        let allPass = true;
+        puzzle.truthTable.forEach(row => {
+            Object.entries(row.inputs).forEach(([key, val]) => this.setPinValue(key, val));
+            this.updateLogic();
+            puzzle.outputs.forEach(outKey => {
+                const expected = row.outputs[outKey];
+                const actual = this.getOutputValue(outKey);
+                if (expected !== actual) allPass = false;
+            });
+        });
+
+        // Reset inputs to LOW after evaluation
+        puzzle.inputs.forEach(name => this.setPinValue(name, false));
+        this.updateLogic();
+        return allPass;
     }
 
     tick() {

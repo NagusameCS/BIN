@@ -9,6 +9,10 @@
 <body>
     <div id="app">
         <div id="toolbar">
+            <header id="brand">
+                <div class="title">Binary Lab</div>
+                <div class="subtitle">Daily circuit puzzles</div>
+            </header>
             <h2>Components</h2>
             <div class="component-category">
                 <h3>Sources</h3>
@@ -57,9 +61,37 @@
                 <button id="save-btn">Save</button>
                 <button id="load-btn">Load</button>
             </div>
+
+            <div id="puzzle-panel" class="component-category">
+                <h3>Daily Puzzle</h3>
+                <div id="puzzle-meta">
+                    <div id="puzzle-day">Day</div>
+                    <div id="puzzle-level">Level</div>
+                </div>
+                <div id="puzzle-title">Loading...</div>
+                <p id="puzzle-desc">Procedurally generated objective based on today.</p>
+                <div id="truth-table"></div>
+                <div class="puzzle-actions">
+                    <button id="reset-puzzle-btn">Reset Puzzle</button>
+                    <button id="check-puzzle-btn">Check Solution</button>
+                    <button id="next-level-btn">Next Level</button>
+                </div>
+                <div id="puzzle-status"></div>
+            </div>
         </div>
         <div id="canvas-container">
+            <div id="hud">
+                <div>
+                    <div class="badge" id="daily-badge">Daily Generator</div>
+                    <div id="hud-title">Build the circuit, light the board.</div>
+                </div>
+                <div id="progress-track">
+                    <div class="progress-label">Level Progress</div>
+                    <div class="progress-bar"><span id="progress-fill"></span></div>
+                </div>
+            </div>
             <canvas id="circuit-canvas"></canvas>
+            <div id="toast"></div>
         </div>
     </div>
 

@@ -53,7 +53,7 @@ export class Engine {
                 if (clickedComponent.isInteractive) {
                     clickedComponent.toggle();
                     this.simulation.update();
-                } else {
+                } else if (!clickedComponent.locked) {
                     // Start dragging component
                     this.isDragging = true;
                     this.dragStart = pos;
@@ -137,7 +137,8 @@ export class Engine {
         ctx.stroke();
 
         // Draw Wires
-        this.simulation.wires.forEach(wire => wire.draw(ctx, this.gridSize));
+        const now = performance.now();
+        this.simulation.wires.forEach(wire => wire.draw(ctx, this.gridSize, now));
 
         // Draw temp wire
         if (this.wireStart && this.tempWireEnd) {
@@ -156,7 +157,7 @@ export class Engine {
         if (this.currentTool !== 'Select' && this.currentTool !== 'Wire' && this.currentTool !== 'Delete') {
             ctx.globalAlpha = 0.5;
             // Simple ghost representation
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = '#6cf29c';
             ctx.fillRect(this.lastMouse.x - 10, this.lastMouse.y - 10, 20, 20);
             ctx.globalAlpha = 1.0;
         }

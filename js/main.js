@@ -1,10 +1,15 @@
 import { Engine } from './engine.js';
 import { Simulation } from './simulation.js';
+import { PuzzleManager } from './puzzles.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('circuit-canvas');
     const simulation = new Simulation();
     const engine = new Engine(canvas, simulation);
+    const puzzleManager = new PuzzleManager();
+
+    let currentLevelIndex = 0;
+    let activePuzzle = null;
 
     // Resize canvas to fit container
     function resizeCanvas() {
@@ -16,6 +21,44 @@ document.addEventListener('DOMContentLoaded', () => {
     
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
+
+    const toastEl = document.getElementById('toast');
+    const truthTableEl = document.getElementById('truth-table');
+    const puzzleTitle = document.getElementById('puzzle-title');
+    const puzzleDesc = document.getElementById('puzzle-desc');
+    const puzzleDay = document.getElementById('puzzle-day');
+    const puzzleLevel = document.getElementById('puzzle-level');
+    const puzzleStatus = document.getElementById('puzzle-status');
+    const progressFill = document.getElementById('progress-fill');
+    const dailyBadge = document.getElementById('daily-badge');
+
+    function showToast(message, tone = 'info') {
+        toastEl.textContent = message;
+        toastEl.classList.toggle('show', true);
+        toastEl.style.borderColor = tone === 'error' ? '#ff6b6b' : '#6cf29c';
+        toastEl.style.background = tone === 'error' ? 'rgba(255, 107, 107, 0.18)' : 'rgba(108, 242, 156, 0.18)';
+        setTimeout(() => toastEl.classList.remove('show'), 2000);
+    }
+
+    function renderPuzzle(index = 0) {
+        currentLevelIndex = index;
+        activePuzzle = puzzleManager.getPuzzle(index);
+        if (!activePuzzle) return;
+
+        puzzleTitle.textContent = activePuzzle.title;
+        puzzleDesc.textContent = activePuzzle.description;
+        puzzleDay.textContent = `Day ${puzzleManager.dayIndex}`;
+        puzzleLevel.textContent = `Level ${index + 1}`;
+        truthTableEl.textContent = puzzleManager.formatTruthTable(activePuzzle);
+        puzzleStatus.textContent = activePuzzle.hint;
+        dailyBadge.textContent = `Daily Generator · ${puzzleManager.dayIndex}`;
+
+        const progress = ((index) / (puzzleManager.puzzles.length - 1)) * 100;
+        progressFill.style.width = `${progress}%`;
+
+        simulation.loadPuzzle(activePuzzle);
+        engine.draw();
+    }
 
     // Toolbar interactions
     const toolBtns = document.querySelectorAll('.tool-btn');
@@ -88,7 +131,34 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`Chip '${name}' created!`);
         }
     });
+
+    document.getElementById('reset-puzzle-btn').addEventListener('click', () => {
+        renderPuzzle(currentLevelIndex);
+        showToast('Puzzle reset');
+    });
+
+    document.getElementById('check-puzzle-btn').addEventListener('click', () => {
+        const solved = simulation.checkTruthTable(activePuzzle);
+        if (solved) {
+            puzzleStatus.textContent = 'Solved! Load the next level to keep going.';
+            showToast('Puzzle solved!');
+            const progress = ((currentLevelIndex + 1) / puzzleManager.puzzles.length) * 100;
+            progressFill.style.width = `${progress}%`;
+        } else {
+            puzzleStatus.textContent = 'Not quite right yet. Check your truth table.';
+            showToast('Outputs do not match the target yet.', 'error');
+        }
+    });
+
+    document.getElementById('next-level-btn').addEventListener('click', () => {
+        const next = Math.min(currentLevelIndex + 1, puzzleManager.puzzles.length - 1);
+        renderPuzzle(next);
+        showToast(`Level ${next + 1} loaded`);
+    });
     
     // Start the engine loop
     engine.start();
+
+    // Load the daily puzzle set
+    renderPuzzle(0);
 });
