@@ -78,7 +78,7 @@ export class Simulation {
 
         // Remove wires (check endpoints)
         this.wires = this.wires.filter(w => {
-            return !this.isPointNearLine(x, y, w.x1, w.y1, w.x2, w.y2);
+            return !this.isPointNearLine(x, y, w.x1, w.y1, w.x2, w.y2, 8);
         });
 
         this.update();
@@ -127,12 +127,11 @@ export class Simulation {
         return definition;
     }
 
-    isPointNearLine(px, py, x1, y1, x2, y2) {
+    isPointNearLine(px, py, x1, y1, x2, y2, tolerance = 5) {
         const d = Math.abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1) / Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
-        // Check if point is within the segment bounds
-        const withinBounds = px >= Math.min(x1, x2) - 5 && px <= Math.max(x1, x2) + 5 &&
-            py >= Math.min(y1, y2) - 5 && py <= Math.max(y1, y2) + 5;
-        return d < 5 && withinBounds;
+        const withinBounds = px >= Math.min(x1, x2) - tolerance && px <= Math.max(x1, x2) + tolerance &&
+            py >= Math.min(y1, y2) - tolerance && py <= Math.max(y1, y2) + tolerance;
+        return d < tolerance && withinBounds;
     }
 
     start() {

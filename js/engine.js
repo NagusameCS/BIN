@@ -19,6 +19,13 @@ export class Engine {
 
         this.game = this.createGame();
         window.addEventListener('resize', () => this.handleResize());
+        window.addEventListener('keydown', e => {
+            if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedComponent && !this.selectedComponent.locked) {
+                const { x, y } = this.selectedComponent;
+                this.simulation.removeAt(x, y);
+                this.selectedComponent = null;
+            }
+        });
     }
 
     createGame() {
@@ -31,11 +38,14 @@ export class Engine {
             parent: this.parent,
             width,
             height,
+            resolution: window.devicePixelRatio || 1,
+            antialias: true,
             backgroundColor: '#0a0d14',
             scene: {
                 create() {
                     engine.scene = this;
                     engine.graphics = this.add.graphics();
+                    if (this.input.mouse) this.input.mouse.disableContextMenu();
                     this.input.on('pointerdown', p => engine.pointerDown(p));
                     this.input.on('pointermove', p => engine.pointerMove(p));
                     this.input.on('pointerup', p => engine.pointerUp(p));
@@ -87,7 +97,7 @@ export class Engine {
         return anchors;
     }
 
-    snapToAnchor(pos, radius = 12) {
+    snapToAnchor(pos, radius = 16) {
         const anchors = this.collectAnchors();
         let best = null;
         let bestDist = Infinity;
@@ -104,6 +114,12 @@ export class Engine {
     pointerDown(pointer) {
         const pos = this.pointerToGrid(pointer);
         this.lastPointer = pos;
+
+        // Right-click quick delete
+        if (pointer.rightButtonDown()) {
+            this.simulation.removeAt(pos.x, pos.y);
+            return;
+        }
 
         if (this.currentTool === 'Select') {
             const hit = this.simulation.findComponentAt(pos.x, pos.y);
@@ -170,16 +186,16 @@ export class Engine {
         g.fillRect(0, 0, width, height);
 
         // Grid
-        const minorColor = this.renderMode === 'wireframe' ? 0x30354a : 0x252a37;
-        const majorColor = this.renderMode === 'wireframe' ? 0x7aa3ff : 0x7be0a4;
-        g.lineStyle(1, minorColor, 0.6);
+        const minorColor = this.renderMode === 'wireframe' ? 0x4a536b : 0x1f2532;
+        const majorColor = this.renderMode === 'wireframe' ? 0x9fb5ff : 0x8be8b4;
+        g.lineStyle(1, minorColor, 0.55);
         for (let x = 0; x <= width; x += this.gridSize) {
             g.lineBetween(x, 0, x, height);
         }
         for (let y = 0; y <= height; y += this.gridSize) {
             g.lineBetween(0, y, width, y);
         }
-        g.lineStyle(1.4, majorColor, 0.22);
+        g.lineStyle(1.4, majorColor, 0.3);
         const majorStep = this.gridSize * 5;
         for (let x = 0; x <= width; x += majorStep) {
             g.lineBetween(x, 0, x, height);
@@ -191,17 +207,20 @@ export class Engine {
         // Wires
         const now = time;
         this.simulation.wires.forEach(wire => {
-            const pulse = (Math.sin(now / 320) + 1) / 2;
+            const pulse = (Math.sin(now / 260) + 1) / 2;
             const active = wire.state;
             const color = this.renderMode === 'wireframe'
-                ? 0x7aa3ff
-                : (active ? 0x6cf29c : 0x3a3f52);
-            g.lineStyle(active ? 3 : 2, color, 1);
+                ? 0x9fb5ff
+                : (active ? 0x8af7b1 : 0x2f364b);
+            const underColor = this.renderMode === 'wireframe' ? 0x23314d : 0x121722;
+            g.lineStyle(active ? 4 : 3, underColor, 0.9);
+            g.lineBetween(wire.x1, wire.y1, wire.x2, wire.y2);
+            g.lineStyle(active ? 2.5 : 2, color, 1);
             g.lineBetween(wire.x1, wire.y1, wire.x2, wire.y2);
             const capColor = active ? color : 0x4a5066;
             g.fillStyle(capColor, 1);
-            g.fillCircle(wire.x1, wire.y1, 3 + pulse * (active ? 1 : 0));
-            g.fillCircle(wire.x2, wire.y2, 3 + pulse * (active ? 1 : 0));
+            g.fillCircle(wire.x1, wire.y1, 3.5 + pulse * (active ? 1 : 0));
+            g.fillCircle(wire.x2, wire.y2, 3.5 + pulse * (active ? 1 : 0));
         });
 
         // Temp wire
@@ -221,7 +240,7 @@ export class Engine {
             const x = comp.x - w / 2;
             const y = comp.y - h / 2;
             const isLocked = comp.locked;
-            const baseColor = this.renderMode === 'wireframe' ? 0x0a0d14 : (isLocked ? 0x1b2c32 : 0x1f2d3b);
+            const baseColor = this.renderMode === 'wireframe' ? 0x0f1524 : (isLocked ? 0x1c2e35 : 0x243448);
             const strokeColor = isLocked ? 0x6cf29c : 0xb7c7ff;
             g.fillStyle(baseColor, 0.95);
             g.lineStyle(isLocked ? 2.4 : 2, strokeColor, 0.9);
@@ -229,15 +248,15 @@ export class Engine {
             g.strokeRoundedRect(x, y, w, h, 8);
 
             // Pins
-            const pinActive = this.renderMode === 'wireframe' ? 0x7aa3ff : 0x6ac8ff;
-            const pinInactive = this.renderMode === 'wireframe' ? 0x5a6a8a : 0x4a5066;
+            const pinActive = this.renderMode === 'wireframe' ? 0x9fb5ff : 0x9cf7c8;
+            const pinInactive = this.renderMode === 'wireframe' ? 0x5a6a8a : 0x3a4255;
             comp.getInputs().forEach(pin => {
                 g.fillStyle(pinInactive, 1);
                 g.fillCircle(pin.x, pin.y, 4);
             });
             comp.getOutputs().forEach(pin => {
                 const active = !!pin.value;
-                g.fillStyle(active ? (this.renderMode === 'wireframe' ? 0x7cffb7 : 0x6cf29c) : pinInactive, 1);
+                g.fillStyle(active ? (this.renderMode === 'wireframe' ? 0x9fb5ff : 0x9cf7c8) : pinInactive, 1);
                 g.fillCircle(pin.x, pin.y, 4.5);
             });
 
@@ -246,7 +265,9 @@ export class Engine {
                 const label = this.scene.add.text(comp.x, comp.y, comp.type, {
                     fontFamily: 'JetBrains Mono, monospace',
                     fontSize: '12px',
-                    color: '#e6edf7'
+                    color: '#e6edf7',
+                    stroke: '#0a0d14',
+                    strokeThickness: 3
                 }).setOrigin(0.5);
                 this.labels.push(label);
             }
