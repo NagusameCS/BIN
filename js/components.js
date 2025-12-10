@@ -45,6 +45,107 @@ export class Wire {
     }
 }
 
+// Base component class
+export class Component {
+    constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.width = 2; // in grid units
+        this.height = 2;
+        this.rotation = 0;
+        this.inputs = []; // Array of {x, y (relative), id}
+        this.outputs = []; // Array of {x, y (relative), value}
+        this.state = {};
+        this.isInteractive = false;
+        this.locked = false;
+    }
+
+    hitTest(x, y) {
+        const halfW = (this.width * 20) / 2;
+        const halfH = (this.height * 20) / 2;
+        return x >= this.x - halfW && x <= this.x + halfW &&
+            y >= this.y - halfH && y <= this.y + halfH;
+    }
+
+    getInputs() {
+        return this.inputs.map(i => ({
+            x: this.x + i.x * 20,
+            y: this.y + i.y * 20,
+            id: i.id
+        }));
+    }
+
+    getOutputs() {
+        return this.outputs.map(o => ({
+            x: this.x + o.x * 20,
+            y: this.y + o.y * 20,
+            value: o.value
+        }));
+    }
+
+    setInput(id, value) {
+        // To be implemented by subclasses or generic handler
+    }
+
+    resetInputs() {
+        if (this.inputs) {
+            this.inputs.forEach(inp => this.setInput(inp.id, false));
+        }
+    }
+
+    compute() { }
+    toggle() { }
+
+    draw(ctx, gridSize, mode = 'real') {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        if (mode === 'wireframe') {
+            ctx.fillStyle = 'rgba(0,0,0,0)';
+            ctx.strokeStyle = this.locked ? 'rgba(108,242,156,0.6)' : '#7aa3ff';
+        } else {
+            ctx.fillStyle = this.locked ? 'rgba(255,255,255,0.06)' : '#333';
+            ctx.strokeStyle = this.locked ? 'rgba(108,242,156,0.6)' : '#fff';
+        }
+        ctx.lineWidth = this.locked ? 2.5 : 2;
+        const w = this.width * gridSize;
+        const h = this.height * gridSize;
+        ctx.fillRect(-w / 2, -h / 2, w, h);
+        ctx.strokeRect(-w / 2, -h / 2, w, h);
+
+        ctx.fillStyle = mode === 'wireframe' ? '#b7c7ff' : '#fff';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.type, 0, 0);
+
+        this.drawPins(ctx, gridSize, mode);
+        ctx.restore();
+    }
+
+    drawPins(ctx, gridSize, mode = 'real') {
+        ctx.lineWidth = 1.6;
+        this.inputs.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x * gridSize, p.y * gridSize, 4, 0, Math.PI * 2);
+            ctx.fillStyle = mode === 'wireframe' ? '#7aa3ff' : '#6ac8ff';
+            ctx.strokeStyle = mode === 'wireframe' ? 'rgba(122,163,255,0.6)' : 'rgba(255,255,255,0.25)';
+            ctx.fill();
+            ctx.stroke();
+        });
+
+        this.outputs.forEach(p => {
+            const active = !!p.value;
+            ctx.beginPath();
+            ctx.arc(p.x * gridSize, p.y * gridSize, 4, 0, Math.PI * 2);
+            ctx.fillStyle = active ? (mode === 'wireframe' ? '#7cffb7' : '#6cf29c') : (mode === 'wireframe' ? '#5a6a8a' : '#4a5066');
+            ctx.strokeStyle = mode === 'wireframe' ? 'rgba(124,255,183,0.45)' : 'rgba(255,255,255,0.2)';
+            ctx.fill();
+            ctx.stroke();
+        });
+    }
+}
+
 function drawGateShape(ctx, { w, h, variant, mode, accent = '#6cf29c', active = false, bubble = false, label = '' }) {
     const stroke = mode === 'wireframe' ? '#7aa3ff' : accent;
     const fill = mode === 'wireframe' ? 'rgba(0,0,0,0)' : (active ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.04)');
@@ -180,120 +281,6 @@ export class Protoboard extends Component {
     }
 }
 
-export class Component {
-    constructor(x, y, type) {
-        this.x = x;
-        this.y = y;
-        this.type = type;
-        this.width = 2; // in grid units
-        this.height = 2;
-        this.rotation = 0;
-        this.inputs = []; // Array of {x, y (relative), id}
-        this.outputs = []; // Array of {x, y (relative), value}
-        this.state = {};
-        this.isInteractive = false;
-        this.locked = false;
-    }
-
-    hitTest(x, y) {
-        // Simple bounding box
-        // Assuming center origin or top-left? Let's use center for rotation, but top-left is easier for grid.
-        // Let's use center.
-        const halfW = (this.width * 20) / 2;
-        const halfH = (this.height * 20) / 2;
-        return x >= this.x - halfW && x <= this.x + halfW &&
-            y >= this.y - halfH && y <= this.y + halfH;
-    }
-
-    getInputs() {
-        return this.inputs.map(i => ({
-            x: this.x + i.x * 20,
-            y: this.y + i.y * 20,
-            id: i.id
-        }));
-    }
-
-    getOutputs() {
-        return this.outputs.map(o => ({
-            x: this.x + o.x * 20,
-            y: this.y + o.y * 20,
-            value: o.value
-        }));
-    }
-
-    setInput(id, value) {
-        // To be implemented by subclasses or generic handler
-    }
-
-    resetInputs() {
-        // Default reset: set known inputs to false if properties exist
-        if (this.inputs) {
-            this.inputs.forEach(inp => this.setInput(inp.id, false));
-        }
-    }
-
-    compute() {
-        // Update outputs based on inputs
-    }
-
-    toggle() {
-        // For interactive components
-    }
-
-    draw(ctx, gridSize, mode = 'real') {
-        // Generic box draw
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        if (mode === 'wireframe') {
-            ctx.fillStyle = 'rgba(0,0,0,0)';
-            ctx.strokeStyle = this.locked ? 'rgba(108,242,156,0.6)' : '#7aa3ff';
-        } else {
-            ctx.fillStyle = this.locked ? 'rgba(255,255,255,0.06)' : '#333';
-            ctx.strokeStyle = this.locked ? 'rgba(108,242,156,0.6)' : '#fff';
-        }
-        ctx.lineWidth = this.locked ? 2.5 : 2;
-        const w = this.width * gridSize;
-        const h = this.height * gridSize;
-        ctx.fillRect(-w / 2, -h / 2, w, h);
-        ctx.strokeRect(-w / 2, -h / 2, w, h);
-
-        // Draw text
-        ctx.fillStyle = mode === 'wireframe' ? '#b7c7ff' : '#fff';
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(this.type, 0, 0);
-
-        // Draw pins
-        this.drawPins(ctx, gridSize, mode);
-
-        ctx.restore();
-    }
-
-    drawPins(ctx, gridSize, mode = 'real') {
-        // Inputs
-        ctx.lineWidth = 1.6;
-        this.inputs.forEach(p => {
-            ctx.beginPath();
-            ctx.arc(p.x * gridSize, p.y * gridSize, 4, 0, Math.PI * 2);
-            ctx.fillStyle = mode === 'wireframe' ? '#7aa3ff' : '#6ac8ff';
-            ctx.strokeStyle = mode === 'wireframe' ? 'rgba(122,163,255,0.6)' : 'rgba(255,255,255,0.25)';
-            ctx.fill();
-            ctx.stroke();
-        });
-
-        // Outputs
-        this.outputs.forEach(p => {
-            const active = !!p.value;
-            ctx.beginPath();
-            ctx.arc(p.x * gridSize, p.y * gridSize, 4, 0, Math.PI * 2);
-            ctx.fillStyle = active ? (mode === 'wireframe' ? '#7cffb7' : '#6cf29c') : (mode === 'wireframe' ? '#5a6a8a' : '#4a5066');
-            ctx.strokeStyle = mode === 'wireframe' ? 'rgba(124,255,183,0.45)' : 'rgba(255,255,255,0.2)';
-            ctx.fill();
-            ctx.stroke();
-        });
-    }
-}
 
 // --- Sources ---
 
