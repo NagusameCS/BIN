@@ -18,107 +18,7 @@
     box-sizing: border-box;
 }
 
-body,
-html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    font-family: 'Manrope', 'Segoe UI', sans-serif;
-    font-size: 15px;
-    line-height: 1.5;
-    letter-spacing: 0.01em;
-    color: var(--text);
-    background: radial-gradient(circle at 20% 20%, rgba(62, 131, 211, 0.06), transparent 35%), radial-gradient(circle at 80% 10%, rgba(245, 200, 106, 0.08), transparent 30%), var(--bg);
-    overflow: hidden;
-}
-
-.app-shell {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-.material-symbols-rounded {
-    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
-    font-size: 20px;
-    line-height: 1;
-}
-
-.nav-bar {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 16px;
-    background: rgba(10, 14, 24, 0.8);
-    border-bottom: 1px solid var(--line);
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(12px);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.brand .mark {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, rgba(245, 200, 106, 0.28), rgba(106, 216, 245, 0.28));
-    border: 1px solid rgba(245, 200, 106, 0.4);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-}
-
-.brand-text .name {
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.brand-text .tagline {
-    color: var(--muted);
-    font-size: 0.9rem;
-}
-
-.nav-crumb {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-left: 8px;
-}
-
-.nav-puzzle {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 12px;
-    align-items: center;
-    min-width: 360px;
-}
-
-.pill-row {
-    display: flex;
-    gap: 8px;
-}
-
-.pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    border-radius: 999px;
-    background: rgba(245, 200, 106, 0.16);
-    color: var(--accent);
-    border: 1px solid rgba(245, 200, 106, 0.4);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-size: 0.8rem;
+font-size: 0.8rem;
 }
 
 .pill.ghost {
@@ -420,11 +320,19 @@ html {
     padding: 12px;
 }
 
-#phaser-root,
+#phaser-root {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--bg);
+}
+
 #phaser-root canvas {
     width: 100%;
     height: 100%;
-    border-radius: 10px;
     display: block;
     image-rendering: auto;
 }
@@ -467,23 +375,20 @@ html {
     box-shadow: 0 0 6px rgba(255, 123, 123, 0.5);
 }
 
-#canvas-container {
-    height: 100%;
-}
-
 #toast {
-    position: absolute;
-    bottom: 16px;
+    position: fixed;
+    top: 16px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 10px 16px;
+    padding: 12px 16px;
     border-radius: 12px;
-    background: rgba(6, 11, 18, 0.85);
+    background: rgba(6, 11, 18, 0.9);
     color: var(--text);
     border: 1px solid var(--line);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
 }
 
 #toast.show {
@@ -622,6 +527,31 @@ canvas {
     }
 }
 
+/* Theme colorways */
+:root[data-theme="neon"] {
+    --bg: #0c0f1a;
+    --panel: rgba(18, 22, 35, 0.92);
+    --accent: #6cf29c;
+    --accent-2: #6ac8ff;
+    --muted: #8fa3c9;
+}
+
+:root[data-theme="sunset"] {
+    --bg: #120910;
+    --panel: rgba(34, 16, 28, 0.92);
+    --accent: #ff9f7a;
+    --accent-2: #ff6b9d;
+    --muted: #c9a5b3;
+}
+
+:root[data-theme="blueprint"] {
+    --bg: #0a0f1f;
+    --panel: rgba(10, 16, 36, 0.94);
+    --accent: #5ad1ff;
+    --accent-2: #7cf2c3;
+    --muted: #99b3e0;
+}
+
 font-size: 1.05rem;
 }
 
@@ -673,29 +603,6 @@ font-size: 1.05rem;
     font-size: 0.9rem;
     color: var(--muted);
     line-height: 1.4;
-}
-
-#toast {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    padding: 12px 16px;
-    background: rgba(0, 0, 0, 0.82);
-    color: var(--text);
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    opacity: 0;
-    transition: opacity 0.3s, transform 0.3s;
-    pointer-events: none;
-    z-index: 6;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    transform: translateY(-6px);
-}
-
-#toast.show {
-    opacity: 1;
-    transform: translateY(0);
 }
 
 /* Theme colorways */

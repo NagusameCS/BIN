@@ -16,6 +16,9 @@ export class Engine {
         this.wireStart = null;
         this.tempWireEnd = null;
         this.labels = [];
+        this.hudGroups = [];
+        this.hudButtons = {};
+        this.hudBg = null;
 
         this.game = this.createGame();
         window.addEventListener('resize', () => this.handleResize());
@@ -49,6 +52,8 @@ export class Engine {
                     this.input.on('pointerdown', p => engine.pointerDown(p));
                     this.input.on('pointermove', p => engine.pointerMove(p));
                     this.input.on('pointerup', p => engine.pointerUp(p));
+                    engine.buildHUD();
+                    engine.layoutHUD();
                 },
                 update(time) {
                     if (engine.simulation.isRunning) {
@@ -62,18 +67,47 @@ export class Engine {
 
     handleResize() {
         if (!this.game || !this.parent) return;
-        const w = this.parent.clientWidth;
-        const h = this.parent.clientHeight;
+        const w = this.parent.clientWidth || window.innerWidth;
+        const h = this.parent.clientHeight || window.innerHeight;
         this.game.scale.resize(w, h);
+        this.layoutHUD();
     }
 
     setTool(tool) {
         this.currentTool = tool;
         this.wireStart = null;
+        const keyMap = {
+            Select: 'tool-select',
+            Wire: 'tool-wire',
+            Delete: 'tool-delete',
+            VCC: 'tool-vcc',
+            GND: 'tool-gnd',
+            Clock: 'tool-clk',
+            Switch: 'tool-switch',
+            Button: 'tool-button',
+            LED: 'tool-led',
+            Display: 'tool-display',
+            AND: 'tool-and',
+            OR: 'tool-or',
+            NOT: 'tool-not',
+            NAND: 'tool-nand',
+            NOR: 'tool-nor',
+            XOR: 'tool-xor',
+            XNOR: 'tool-xnor',
+            ProtoSmall: 'tool-board-s',
+            ProtoMedium: 'tool-board-m',
+            ProtoLarge: 'tool-board-l',
+            InputPin: 'tool-in',
+            OutputPin: 'tool-out'
+        };
+        const hudKey = keyMap[tool];
+        if (hudKey) this.setActiveButton('tool', hudKey);
     }
 
     setRenderMode(mode) {
         this.renderMode = mode === 'wireframe' ? 'wireframe' : 'real';
+        const key = this.renderMode === 'wireframe' ? 'view-wire' : 'view-real';
+        this.setActiveButton('view', key);
     }
 
     pointerToGrid(pointer) {
@@ -112,6 +146,8 @@ export class Engine {
     }
 
     pointerDown(pointer) {
+        if (pointer.event && pointer.event.cancelBubble) return;
+        if (this.isPointerInHUD(pointer)) return;
         const pos = this.pointerToGrid(pointer);
         this.lastPointer = pos;
 
@@ -144,6 +180,7 @@ export class Engine {
     }
 
     pointerMove(pointer) {
+        if (this.isPointerInHUD(pointer)) return;
         const pos = this.pointerToGrid(pointer);
         this.lastPointer = pos;
 
@@ -157,6 +194,7 @@ export class Engine {
     }
 
     pointerUp(pointer) {
+        if (this.isPointerInHUD(pointer)) return;
         const pos = this.pointerToGrid(pointer);
 
         if (this.isDragging) {
@@ -279,5 +317,206 @@ export class Engine {
             g.fillStyle(ghostColor, 0.4);
             g.fillRect(this.lastPointer.x - 10, this.lastPointer.y - 10, 20, 20);
         }
+    }
+
+    isPointerInHUD(pointer) {
+        if (!this.hudBg || !this.scene) return false;
+        const bounds = this.hudBg.getBounds();
+        return Phaser.Geom.Rectangle.Contains(bounds, pointer.x, pointer.y);
+    }
+
+    buildHUD() {
+        if (!this.scene) return;
+
+        if (this.hudBg) this.hudBg.destroy();
+        this.hudGroups.forEach(g => g.destroy());
+        this.hudGroups = [];
+        this.hudButtons = {};
+        this.activeHudSelections = {};
+
+        const scene = this.scene;
+        this.hudBg = scene.add.rectangle(0, 0, scene.scale.width, 96, 0x0b0f18, 0.82)
+            .setOrigin(0)
+            .setScrollFactor(0)
+            .setDepth(999);
+
+        const groups = [
+            {
+                label: 'Tools',
+                items: [
+                    { key: 'tool-select', label: 'Select', action: () => this.setTool('Select'), group: 'tool' },
+                    { key: 'tool-wire', label: 'Wire', action: () => this.setTool('Wire'), group: 'tool' },
+                    { key: 'tool-delete', label: 'Delete', action: () => this.setTool('Delete'), group: 'tool' }
+                ]
+            },
+            {
+                label: 'Sources',
+                items: [
+                    { key: 'tool-vcc', label: 'VCC', action: () => this.setTool('VCC') },
+                    { key: 'tool-gnd', label: 'GND', action: () => this.setTool('GND') },
+                    { key: 'tool-clk', label: 'CLK', action: () => this.setTool('Clock') }
+                ]
+            },
+            {
+                label: 'Input',
+                items: [
+                    { key: 'tool-switch', label: 'Switch', action: () => this.setTool('Switch') },
+                    { key: 'tool-button', label: 'Button', action: () => this.setTool('Button') }
+                ]
+            },
+            {
+                label: 'Output',
+                items: [
+                    { key: 'tool-led', label: 'LED', action: () => this.setTool('LED') },
+                    { key: 'tool-display', label: 'Display', action: () => this.setTool('Display') }
+                ]
+            },
+            {
+                label: 'Gates',
+                items: [
+                    { key: 'tool-and', label: 'AND', action: () => this.setTool('AND') },
+                    { key: 'tool-or', label: 'OR', action: () => this.setTool('OR') },
+                    { key: 'tool-not', label: 'NOT', action: () => this.setTool('NOT') },
+                    { key: 'tool-nand', label: 'NAND', action: () => this.setTool('NAND') },
+                    { key: 'tool-nor', label: 'NOR', action: () => this.setTool('NOR') },
+                    { key: 'tool-xor', label: 'XOR', action: () => this.setTool('XOR') },
+                    { key: 'tool-xnor', label: 'XNOR', action: () => this.setTool('XNOR') }
+                ]
+            },
+            {
+                label: 'Boards',
+                items: [
+                    { key: 'tool-board-s', label: 'Board S', action: () => this.setTool('ProtoSmall') },
+                    { key: 'tool-board-m', label: 'Board M', action: () => this.setTool('ProtoMedium') },
+                    { key: 'tool-board-l', label: 'Board L', action: () => this.setTool('ProtoLarge') }
+                ]
+            },
+            {
+                label: 'Custom',
+                items: [
+                    { key: 'tool-in', label: 'Input Pin', action: () => this.setTool('InputPin') },
+                    { key: 'tool-out', label: 'Output Pin', action: () => this.setTool('OutputPin') }
+                ]
+            },
+            {
+                label: 'Sim',
+                items: [
+                    { key: 'sim-play', label: 'Play', action: () => this.simulation.start() },
+                    { key: 'sim-pause', label: 'Pause', action: () => this.simulation.pause() },
+                    { key: 'sim-step', label: 'Step', action: () => this.simulation.step() },
+                    { key: 'sim-clear', label: 'Clear', action: () => { this.simulation.clear(); this.render(); } }
+                ]
+            },
+            {
+                label: 'View',
+                items: [
+                    { key: 'view-real', label: 'Lit', action: () => this.setRenderMode('real'), group: 'view' },
+                    { key: 'view-wire', label: 'Wire', action: () => this.setRenderMode('wireframe'), group: 'view' }
+                ]
+            }
+        ];
+
+        groups.forEach(g => this.createHUDGroup(g));
+
+        this.setActiveButton('tool', 'tool-select');
+        this.setActiveButton('view', 'view-real');
+    }
+
+    createHUDGroup(group) {
+        if (!this.scene) return;
+        const scene = this.scene;
+        const title = scene.add.text(0, 0, group.label, {
+            fontSize: '11px',
+            color: '#9fb1c7',
+            fontFamily: 'Manrope',
+            fontStyle: '700'
+        }).setDepth(1002).setScrollFactor(0);
+
+        const row = scene.add.container(0, title.height + 4).setDepth(1002).setScrollFactor(0);
+        let x = 0;
+        let maxHeight = 0;
+        group.items.forEach(item => {
+            const btn = this.createHUDButton(item.label, x, 0, () => item.action(item), item.key, item.group);
+            row.add(btn.container);
+            this.hudButtons[item.key] = { ...btn, group: item.group, key: item.key };
+            x += btn.width + 6;
+            maxHeight = Math.max(maxHeight, btn.height);
+        });
+
+        const holder = scene.add.container(0, 0, [title, row]).setDepth(1001).setScrollFactor(0);
+        holder.width = Math.max(title.width, x);
+        holder.height = (title.height + 4) + maxHeight;
+        this.hudGroups.push(holder);
+    }
+
+    createHUDButton(label, x, y, onClick, key, group) {
+        const scene = this.scene;
+        const width = Math.max(56, label.length * 7 + 18);
+        const height = 26;
+        const bg = scene.add.rectangle(0, 0, width, height, 0x152033, 0.9).setOrigin(0);
+        bg.setStrokeStyle(1, 0x2f3f56, 0.9);
+        const text = scene.add.text(width / 2, height / 2, label, {
+            fontSize: '12px',
+            fontFamily: 'Manrope',
+            fontStyle: '700',
+            color: '#e6edf7'
+        }).setOrigin(0.5);
+
+        const container = scene.add.container(x, y, [bg, text]).setSize(width, height).setDepth(1002).setScrollFactor(0);
+        container.setData('hud-key', key);
+        container.setData('hud-group', group || null);
+        container.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+        container.on('pointerdown', pointer => {
+            if (pointer.event) {
+                pointer.event.preventDefault();
+                pointer.event.stopPropagation();
+                pointer.event.cancelBubble = true;
+            }
+            onClick();
+            if (group) this.setActiveButton(group, key);
+        });
+
+        return { container, width, height, bg, text };
+    }
+
+    setActiveButton(group, key) {
+        this.activeHudSelections[group] = key;
+        Object.values(this.hudButtons).forEach(btn => {
+            if (!btn || !btn.container) return;
+            const isTargetGroup = btn.group === group;
+            const isActive = isTargetGroup && btn.key === key;
+            const fill = isActive ? 0xf5c86a : 0x152033;
+            const alpha = isActive ? 1 : 0.9;
+            const textColor = isActive ? '#0a0d14' : '#e6edf7';
+            btn.bg.fillColor = fill;
+            btn.bg.alpha = alpha;
+            btn.text.setColor(textColor);
+        });
+    }
+
+    layoutHUD() {
+        if (!this.scene || !this.hudBg || !this.hudGroups.length) return;
+        const maxWidth = this.scene.scale.width - 20;
+        let x = 12;
+        let y = 10;
+        let rowHeight = 0;
+
+        this.hudGroups.forEach(group => {
+            const gWidth = group.width || group.getBounds().width;
+            const gHeight = group.height || group.getBounds().height;
+            if (x + gWidth > maxWidth) {
+                x = 12;
+                y += rowHeight + 10;
+                rowHeight = 0;
+            }
+            group.setPosition(x, y);
+            x += gWidth + 12;
+            rowHeight = Math.max(rowHeight, gHeight);
+        });
+
+        const bgHeight = y + rowHeight + 10;
+        this.hudBg.width = this.scene.scale.width;
+        this.hudBg.height = bgHeight;
+        this.hudBg.setPosition(0, 0);
     }
 }
