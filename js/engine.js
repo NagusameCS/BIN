@@ -19,12 +19,16 @@ export class Engine {
         this.hudGroups = [];
         this.hudButtons = {};
         this.hudBg = null;
+        this.hudRoot = null;
+        this.sections = [];
         this.camera = null;
         this.isPanning = false;
         this.panStart = { x: 0, y: 0 };
         this.cameraStart = { x: 0, y: 0 };
         this.minZoom = 0.55;
         this.maxZoom = 2.2;
+        this.callbacks = {};
+        this.puzzleMeta = null;
 
         this.game = this.createGame();
         window.addEventListener('resize', () => this.handleResize());
@@ -134,6 +138,20 @@ export class Engine {
         this.setActiveButton('view', key);
     }
 
+    on(event, handler) {
+        if (!this.callbacks[event]) this.callbacks[event] = [];
+        this.callbacks[event].push(handler);
+    }
+
+    emit(event, payload) {
+        (this.callbacks[event] || []).forEach(fn => fn(payload));
+    }
+
+    setPuzzleMeta(meta) {
+        this.puzzleMeta = meta;
+        this.updatePuzzleSection();
+    }
+
     pointerToGrid(pointer) {
         const cam = this.camera || (this.scene && this.scene.cameras.main);
         const world = cam ? cam.getWorldPoint(pointer.x, pointer.y) : { x: pointer.x, y: pointer.y };
@@ -176,12 +194,16 @@ export class Engine {
         if (this.isPointerInHUD(pointer)) return;
 
         // Middle-click or space-drag to pan
-        const isMiddle = pointer.middleButtonDown();
-        const isSpaceDrag = pointer.event && pointer.event.buttons === 1 && pointer.event.code !== undefined && pointer.event.code === 'Space';
-        if (isMiddle || isSpaceDrag) {
+        const startPan = () => {
             this.isPanning = true;
             this.panStart = { x: pointer.x, y: pointer.y };
             this.cameraStart = { x: this.camera.scrollX, y: this.camera.scrollY };
+        };
+
+        const isMiddle = pointer.middleButtonDown();
+        const isSpaceDrag = pointer.event && pointer.event.buttons === 1 && pointer.event.code !== undefined && pointer.event.code === 'Space';
+        if (isMiddle || isSpaceDrag) {
+            startPan();
             return;
         }
         const pos = this.pointerToGrid(pointer);
@@ -203,6 +225,9 @@ export class Engine {
                     this.isDragging = true;
                     this.selectedComponent = hit;
                 }
+            } else {
+                // Drag-pan when nothing is picked
+                startPan();
             }
         } else if (this.currentTool === 'Wire') {
             const snap = this.snapToAnchor(pos) || pos;
@@ -212,6 +237,8 @@ export class Engine {
             this.simulation.removeAt(pos.x, pos.y);
         } else {
             this.simulation.addComponent(this.currentTool, pos.x, pos.y);
+            const shiftHeld = pointer.event && pointer.event.shiftKey;
+            if (!shiftHeld) this.setTool('Select');
         }
     }
 
@@ -276,16 +303,22 @@ export class Engine {
         g.fillRect(cam.scrollX - viewW * 0.5, cam.scrollY - viewH * 0.5, viewW * 2, viewH * 2);
 
         // Grid
-        const minorColor = this.renderMode === 'wireframe' ? 0x4a536b : 0x1f2532;
+        const zoom = cam.zoom || 1;
+        const minorColor = this.renderMode === 'wireframe' ? 0x4a536b : 0x273042;
         const majorColor = this.renderMode === 'wireframe' ? 0x9fb5ff : 0x8be8b4;
-        g.lineStyle(1, minorColor, 0.55);
+        const axisColor = this.renderMode === 'wireframe' ? 0xb9ccff : 0xcdece0;
+        const minorAlpha = Phaser.Math.Clamp(0.42 + (zoom - 1) * 0.12, 0.32, 0.72);
+        const majorAlpha = Phaser.Math.Clamp(0.28 + (zoom - 1) * 0.1, 0.24, 0.66);
+        const minorWidth = Math.max(1, 1.1 / zoom);
+        const majorWidth = Math.max(1.2, 1.8 / zoom);
+        g.lineStyle(minorWidth, minorColor, minorAlpha);
         for (let x = startX; x <= endX; x += this.gridSize) {
             g.lineBetween(x, startY, x, endY);
         }
         for (let y = startY; y <= endY; y += this.gridSize) {
             g.lineBetween(startX, y, endX, y);
         }
-        g.lineStyle(1.4, majorColor, 0.3);
+        g.lineStyle(majorWidth, majorColor, majorAlpha);
         const majorStep = this.gridSize * 5;
         for (let x = startX; x <= endX; x += majorStep) {
             g.lineBetween(x, startY, x, endY);
@@ -293,6 +326,10 @@ export class Engine {
         for (let y = startY; y <= endY; y += majorStep) {
             g.lineBetween(startX, y, endX, y);
         }
+        // Emphasize world axes for easier orientation
+        g.lineStyle(Math.max(1.4, 2 / zoom), axisColor, 0.8);
+        g.lineBetween(0, startY, 0, endY);
+        g.lineBetween(startX, 0, endX, 0);
 
         // Wires
         const now = time;
@@ -372,29 +409,37 @@ export class Engine {
     }
 
     isPointerInHUD(pointer) {
-        if (!this.hudBg || !this.scene) return false;
-        const bounds = this.hudBg.getBounds();
+        if (!this.hudRoot || !this.scene) return false;
+        const bounds = this.hudRoot.getBounds();
         return Phaser.Geom.Rectangle.Contains(bounds, pointer.x, pointer.y);
     }
 
     buildHUD() {
         if (!this.scene) return;
 
+        if (this.hudRoot) this.hudRoot.destroy();
         if (this.hudBg) this.hudBg.destroy();
         this.hudGroups.forEach(g => g.destroy());
+        this.sections.forEach(s => s.destroy && s.destroy());
         this.hudGroups = [];
         this.hudButtons = {};
+        this.sections = [];
         this.activeHudSelections = {};
 
         const scene = this.scene;
-        this.hudBg = scene.add.rectangle(0, 0, scene.scale.width, 96, 0x0b0f18, 0.82)
+        this.hudRoot = scene.add.container(0, 0).setScrollFactor(0).setDepth(999);
+        this.hudBg = scene.add.rectangle(0, 0, 320, 110, 0x0b0f18, 0.9)
             .setOrigin(0)
             .setScrollFactor(0)
-            .setDepth(999);
+            .setDepth(998)
+            .setStrokeStyle(1, 0x2f3f56, 0.92);
+        this.hudRoot.add(this.hudBg);
 
-        const groups = [
+        const sections = [
             {
+                key: 'tools',
                 label: 'Tools',
+                expanded: true,
                 items: [
                     { key: 'tool-select', label: 'Select', action: () => this.setTool('Select'), group: 'tool' },
                     { key: 'tool-wire', label: 'Wire', action: () => this.setTool('Wire'), group: 'tool' },
@@ -402,56 +447,35 @@ export class Engine {
                 ]
             },
             {
-                label: 'Sources',
+                key: 'components',
+                label: 'Components',
+                expanded: false,
                 items: [
                     { key: 'tool-vcc', label: 'VCC', action: () => this.setTool('VCC') },
                     { key: 'tool-gnd', label: 'GND', action: () => this.setTool('GND') },
-                    { key: 'tool-clk', label: 'CLK', action: () => this.setTool('Clock') }
-                ]
-            },
-            {
-                label: 'Input',
-                items: [
+                    { key: 'tool-clk', label: 'Clock', action: () => this.setTool('Clock') },
                     { key: 'tool-switch', label: 'Switch', action: () => this.setTool('Switch') },
-                    { key: 'tool-button', label: 'Button', action: () => this.setTool('Button') }
-                ]
-            },
-            {
-                label: 'Output',
-                items: [
+                    { key: 'tool-button', label: 'Button', action: () => this.setTool('Button') },
                     { key: 'tool-led', label: 'LED', action: () => this.setTool('LED') },
-                    { key: 'tool-display', label: 'Display', action: () => this.setTool('Display') }
-                ]
-            },
-            {
-                label: 'Gates',
-                items: [
+                    { key: 'tool-display', label: 'Display', action: () => this.setTool('Display') },
                     { key: 'tool-and', label: 'AND', action: () => this.setTool('AND') },
                     { key: 'tool-or', label: 'OR', action: () => this.setTool('OR') },
                     { key: 'tool-not', label: 'NOT', action: () => this.setTool('NOT') },
                     { key: 'tool-nand', label: 'NAND', action: () => this.setTool('NAND') },
                     { key: 'tool-nor', label: 'NOR', action: () => this.setTool('NOR') },
                     { key: 'tool-xor', label: 'XOR', action: () => this.setTool('XOR') },
-                    { key: 'tool-xnor', label: 'XNOR', action: () => this.setTool('XNOR') }
-                ]
-            },
-            {
-                label: 'Boards',
-                items: [
+                    { key: 'tool-xnor', label: 'XNOR', action: () => this.setTool('XNOR') },
                     { key: 'tool-board-s', label: 'Board S', action: () => this.setTool('ProtoSmall') },
                     { key: 'tool-board-m', label: 'Board M', action: () => this.setTool('ProtoMedium') },
-                    { key: 'tool-board-l', label: 'Board L', action: () => this.setTool('ProtoLarge') }
-                ]
-            },
-            {
-                label: 'Custom',
-                items: [
+                    { key: 'tool-board-l', label: 'Board L', action: () => this.setTool('ProtoLarge') },
                     { key: 'tool-in', label: 'Input Pin', action: () => this.setTool('InputPin') },
                     { key: 'tool-out', label: 'Output Pin', action: () => this.setTool('OutputPin') }
                 ]
             },
             {
-                label: 'Sim',
+                key: 'sim',
+                label: 'Simulation',
+                expanded: false,
                 items: [
                     { key: 'sim-play', label: 'Play', action: () => this.simulation.start() },
                     { key: 'sim-pause', label: 'Pause', action: () => this.simulation.pause() },
@@ -460,45 +484,104 @@ export class Engine {
                 ]
             },
             {
+                key: 'view',
                 label: 'View',
+                expanded: false,
                 items: [
                     { key: 'view-real', label: 'Lit', action: () => this.setRenderMode('real'), group: 'view' },
                     { key: 'view-wire', label: 'Wire', action: () => this.setRenderMode('wireframe'), group: 'view' }
                 ]
+            },
+            {
+                key: 'puzzle',
+                label: 'Puzzle',
+                expanded: false,
+                items: [
+                    { key: 'puzzle-reset', label: 'Reset', action: () => this.emit('puzzle-reset') },
+                    { key: 'puzzle-check', label: 'Check', action: () => this.emit('puzzle-check') },
+                    { key: 'puzzle-next', label: 'Next', action: () => this.emit('puzzle-next') }
+                ]
             }
         ];
 
-        groups.forEach(g => this.createHUDGroup(g));
+        sections.forEach(sec => this.createHUDSection(sec));
 
         this.setActiveButton('tool', 'tool-select');
         this.setActiveButton('view', 'view-real');
+        this.layoutHUD();
+        this.updatePuzzleSection();
     }
 
-    createHUDGroup(group) {
+    createHUDSection(section) {
         if (!this.scene) return;
         const scene = this.scene;
-        const title = scene.add.text(0, 0, group.label, {
-            fontSize: '11px',
-            color: '#9fb1c7',
+        const headerHeight = 28;
+        const width = 260;
+
+        const headerBg = scene.add.rectangle(0, 0, width, headerHeight, 0x111a2a, 0.95).setOrigin(0).setScrollFactor(0).setDepth(1001);
+        headerBg.setStrokeStyle(1, 0x2f3f56, 0.9);
+        const title = scene.add.text(10, headerHeight / 2, section.label, {
+            fontSize: '12px',
+            color: '#e6edf7',
             fontFamily: 'Manrope',
             fontStyle: '700'
-        }).setDepth(1002).setScrollFactor(0);
+        }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(1002);
 
-        const row = scene.add.container(0, title.height + 4).setDepth(1002).setScrollFactor(0);
-        let x = 0;
-        let maxHeight = 0;
-        group.items.forEach(item => {
-            const btn = this.createHUDButton(item.label, x, 0, () => item.action(item), item.key, item.group);
-            row.add(btn.container);
+        const chevron = scene.add.text(width - 18, headerHeight / 2, section.expanded ? '▾' : '▸', {
+            fontSize: '12px', color: '#9fb1c7', fontFamily: 'Manrope'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(1002);
+
+        const panel = scene.add.container(0, headerHeight).setScrollFactor(0).setDepth(1001);
+        let x = 6;
+        let y = 6;
+        let rowH = 0;
+        const maxInnerWidth = width - 12;
+        section.items.forEach(item => {
+            const btn = this.createHUDButton(item.label, x, y, () => item.action(item), item.key, item.group);
+            panel.add(btn.container);
             this.hudButtons[item.key] = { ...btn, group: item.group, key: item.key };
             x += btn.width + 6;
-            maxHeight = Math.max(maxHeight, btn.height);
+            rowH = Math.max(rowH, btn.height);
+            if (x + 60 > maxInnerWidth) {
+                x = 6;
+                y += rowH + 6;
+                rowH = 0;
+            }
         });
+        y += rowH + 6;
+        panel.height = y;
+        panel.width = width;
 
-        const holder = scene.add.container(0, 0, [title, row]).setDepth(1001).setScrollFactor(0);
-        holder.width = Math.max(title.width, x);
-        holder.height = (title.height + 4) + maxHeight;
-        this.hudGroups.push(holder);
+        const container = scene.add.container(0, 0, [headerBg, title, chevron, panel]).setScrollFactor(0).setDepth(1001);
+        container.width = width;
+        container.height = headerHeight + (section.expanded ? panel.height : 0);
+        panel.setVisible(section.expanded);
+
+        const toggle = (pointer) => {
+            if (pointer && pointer.event) {
+                pointer.event.preventDefault();
+                pointer.event.stopPropagation();
+                pointer.event.cancelBubble = true;
+            }
+            const expanded = !panel.visible;
+            panel.setVisible(expanded);
+            chevron.setText(expanded ? '▾' : '▸');
+            container.height = headerHeight + (expanded ? panel.height : 0);
+            this.layoutHUD();
+        };
+
+        headerBg.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, headerHeight), Phaser.Geom.Rectangle.Contains);
+        headerBg.on('pointerdown', toggle);
+        title.setInteractive();
+        title.on('pointerdown', toggle);
+        chevron.setInteractive();
+        chevron.on('pointerdown', toggle);
+
+        container.panel = panel;
+        container.chevron = chevron;
+        container.headerHeight = headerHeight;
+        this.sections.push(container);
+        this.hudRoot.add(container);
     }
 
     createHUDButton(label, x, y, onClick, key, group) {
@@ -547,32 +630,61 @@ export class Engine {
     }
 
     layoutHUD() {
-        if (!this.scene || !this.hudBg || !this.hudGroups.length) return;
-        const maxWidth = Math.min(460, this.scene.scale.width - 24);
-        let x = 14;
-        let y = 14;
-        let rowHeight = 0;
-        let maxRowWidth = 0;
+        if (!this.scene || !this.hudBg || !this.sections.length || !this.game) return;
+        const margin = 10;
+        const puzzleHeight = this.puzzleText ? this.puzzleText.height + 4 : 0;
+        const sectionY = puzzleHeight ? puzzleHeight + 8 : margin;
+        let x = margin;
+        let maxHeight = 0;
 
-        this.hudGroups.forEach(group => {
-            const gWidth = group.width || group.getBounds().width;
-            const gHeight = group.height || group.getBounds().height;
-            if (x + gWidth > maxWidth) {
-                x = 14;
-                y += rowHeight + 12;
-                rowHeight = 0;
-            }
-            group.setPosition(x, y);
-            x += gWidth + 10;
-            rowHeight = Math.max(rowHeight, gHeight);
-            maxRowWidth = Math.max(maxRowWidth, x - 14);
+        this.sections.forEach(sec => {
+            sec.setPosition(x, sectionY);
+            const bounds = sec.getBounds();
+            x += bounds.width + 8;
+            maxHeight = Math.max(maxHeight, bounds.height);
         });
 
-        const bgHeight = y + rowHeight + 12;
-        const bgWidth = Math.max(280, Math.min(maxWidth, maxRowWidth + 8));
-        this.hudBg.width = bgWidth;
+        const bgWidth = x + margin;
+        const bgHeight = sectionY + maxHeight + margin;
+        this.hudBg.width = Math.max(360, bgWidth);
         this.hudBg.height = bgHeight;
-        this.hudBg.setPosition(10, 10);
-        this.hudBg.setStrokeStyle(1, 0x2f3f56, 0.9);
+        this.hudBg.setPosition(0, 0);
+
+        const viewW = this.game.scale.width;
+        const viewH = this.game.scale.height;
+        const rootX = Math.max(margin, (viewW - this.hudBg.width) / 2);
+        const rootY = viewH - this.hudBg.height - margin;
+        this.hudRoot.setPosition(rootX, rootY);
+
+        if (this.puzzleText) {
+            this.puzzleText.setPosition(margin, 6);
+            this.hudRoot.bringToTop(this.puzzleText);
+        }
+        this.hudRoot.bringToTop(this.hudBg);
+    }
+
+    updatePuzzleSection() {
+        if (!this.scene) return;
+        if (!this.puzzleMeta) {
+            if (this.puzzleText) {
+                this.puzzleText.destroy();
+                this.puzzleText = null;
+            }
+            return;
+        }
+
+        const label = `Day ${this.puzzleMeta.day || '?'} · ${this.puzzleMeta.title || 'Puzzle'}`;
+        const diff = this.puzzleMeta.difficulty ? ` (${this.puzzleMeta.difficulty})` : '';
+        if (!this.puzzleText) {
+            this.puzzleText = this.scene.add.text(0, 0, label + diff, {
+                fontSize: '12px',
+                color: '#9fb1c7',
+                fontFamily: 'Manrope'
+            }).setDepth(1002).setScrollFactor(0);
+            if (this.hudRoot) this.hudRoot.add(this.puzzleText);
+        } else {
+            this.puzzleText.setText(label + diff);
+        }
+        this.layoutHUD();
     }
 }
