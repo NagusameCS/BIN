@@ -39,12 +39,18 @@ html {
     min-height: 100vh;
 }
 
+.material-symbols-rounded {
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    font-size: 20px;
+    line-height: 1;
+}
+
 .nav-bar {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: 18px;
-    padding: 14px 18px;
+    gap: 14px;
+    padding: 12px 16px;
     background: rgba(10, 14, 24, 0.8);
     border-bottom: 1px solid var(--line);
     box-shadow: var(--shadow);
@@ -57,7 +63,7 @@ html {
 .brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .brand .mark {
@@ -78,6 +84,13 @@ html {
 .brand-text .tagline {
     color: var(--muted);
     font-size: 0.9rem;
+}
+
+.nav-crumb {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-left: 8px;
 }
 
 .nav-puzzle {
@@ -114,22 +127,19 @@ html {
     color: var(--text);
 }
 
-.nav-title div {
-    font-size: 1.1rem;
+.nav-title {
+    font-size: 1rem;
     font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.nav-title small {
-    color: var(--muted);
+    color: var(--text);
 }
 
 .nav-controls {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .seg-control {
@@ -143,6 +153,14 @@ html {
 
 .seg-control.trio {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.seg-control.icon-control .seg-btn {
+    min-width: 40px;
+    min-height: 38px;
+    padding: 6px;
+    display: grid;
+    place-items: center;
 }
 
 .seg-btn {
@@ -166,6 +184,13 @@ html {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.nav-actions.compact .chip {
+    padding: 8px;
+    min-width: 40px;
+    display: grid;
+    place-items: center;
 }
 
 .chip {
@@ -296,6 +321,7 @@ html {
     flex-direction: column;
     gap: 12px;
     padding: 16px;
+    min-height: 0;
 }
 
 .hero {
@@ -385,6 +411,7 @@ html {
     max-width: 1400px;
     margin: 0 auto;
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+    min-height: 70vh;
 }
 
 .canvas-frame {
@@ -400,6 +427,44 @@ html {
     border-radius: 10px;
     display: block;
     image-rendering: auto;
+}
+
+.io-list {
+    display: grid;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.io-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.io-row .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    background: #4a5066;
+    box-shadow: 0 0 0 1px var(--line);
+}
+
+.io-row.on .dot {
+    background: #7fe0a6;
+    box-shadow: 0 0 6px rgba(127, 224, 166, 0.8);
+}
+
+.io-row.off .dot {
+    background: #ff7b7b;
+    box-shadow: 0 0 6px rgba(255, 123, 123, 0.5);
 }
 
 #canvas-container {

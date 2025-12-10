@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dailyBadge = document.getElementById('daily-badge');
     const viewButtons = document.querySelectorAll('#view-toggle .seg-btn');
     const themeButtons = document.querySelectorAll('#theme-toggle .seg-btn');
+    const liveOutputList = document.getElementById('live-output-list');
 
     function showToast(message, tone = 'info') {
         toastEl.textContent = message;
@@ -62,6 +63,20 @@ document.addEventListener('DOMContentLoaded', () => {
         renderProgress(index);
         simulation.loadPuzzle(activePuzzle);
         engine.render();
+        renderLiveOutputs();
+    }
+
+    function renderLiveOutputs() {
+        if (!liveOutputList) return;
+        const outputs = simulation.components.filter(c => c.type === 'OutputPin');
+        liveOutputList.innerHTML = '';
+        outputs.forEach(out => {
+            const row = document.createElement('div');
+            const on = !!out.value;
+            row.className = `io-row ${on ? 'on' : 'off'}`;
+            row.innerHTML = `<span><span class="dot"></span>${out.label || out.id || 'OUT'}</span><span>${on ? 'HIGH' : 'LOW'}</span>`;
+            liveOutputList.appendChild(row);
+        });
     }
 
     // Toolbar interactions
@@ -75,9 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Control buttons
-    document.getElementById('play-btn').addEventListener('click', () => simulation.start());
-    document.getElementById('pause-btn').addEventListener('click', () => simulation.pause());
-    document.getElementById('step-btn').addEventListener('click', () => simulation.step());
+    document.getElementById('play-btn').addEventListener('click', () => { simulation.start(); });
+    document.getElementById('pause-btn').addEventListener('click', () => { simulation.pause(); renderLiveOutputs(); });
+    document.getElementById('step-btn').addEventListener('click', () => { simulation.step(); renderLiveOutputs(); });
     document.getElementById('clear-btn').addEventListener('click', () => {
         simulation.clear();
         engine.render();
@@ -105,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.onload = event => {
                 simulation.loadJSON(event.target.result);
                 engine.render();
+                renderLiveOutputs();
             };
             reader.readAsText(file);
         };
@@ -147,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
             puzzleStatus.textContent = 'Not quite right yet. Check your truth table.';
             showToast('Outputs do not match the target yet.', 'error');
         }
+        renderLiveOutputs();
     });
 
     document.getElementById('next-level-btn').addEventListener('click', () => {
