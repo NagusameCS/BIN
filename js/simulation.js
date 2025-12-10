@@ -159,8 +159,17 @@ export class Simulation {
         this.currentPuzzle = puzzle;
         const baseXLeft = 140;
         const baseXRight = 760;
-        const spacing = 90;
+        const spacing = Math.max(70, 360 / Math.max(1, puzzle.inputs.length));
         const startY = 160;
+
+        // Drop a locked protoboard that matches the base plate if provided.
+        if (puzzle.basePlate) {
+            const sizeKey = (puzzle.basePlate.layout || '').toLowerCase();
+            const size = sizeKey.includes('large') ? 'large' : sizeKey.includes('small') ? 'small' : 'medium';
+            const proto = new Protoboard((baseXLeft + baseXRight) / 2, startY + 60, size);
+            proto.locked = true;
+            this.components.push(proto);
+        }
 
         puzzle.inputs.forEach((name, idx) => {
             const pin = new InputPin(baseXLeft, startY + idx * spacing);

@@ -3,24 +3,13 @@ import { Simulation } from './simulation.js';
 import { PuzzleManager } from './puzzles.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const canvas = document.getElementById('circuit-canvas');
+    const mount = document.getElementById('phaser-root');
     const simulation = new Simulation();
-    const engine = new Engine(canvas, simulation);
+    const engine = new Engine(mount, simulation);
     const puzzleManager = new PuzzleManager();
 
     let currentLevelIndex = 0;
     let activePuzzle = null;
-
-    // Resize canvas to fit container
-    function resizeCanvas() {
-        const container = document.getElementById('canvas-container');
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-        engine.draw();
-    }
-
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
 
     const toastEl = document.getElementById('toast');
     const truthTableEl = document.getElementById('truth-table');
@@ -33,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const puzzleLevelInline = document.getElementById('puzzle-level-inline');
     const puzzleStatus = document.getElementById('puzzle-status');
     const progressFill = document.getElementById('progress-fill');
+    const progressValue = document.getElementById('progress-value');
     const dailyBadge = document.getElementById('daily-badge');
     const viewButtons = document.querySelectorAll('#view-toggle .seg-btn');
     const themeButtons = document.querySelectorAll('#theme-toggle .seg-btn');
@@ -43,6 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
         toastEl.style.borderColor = tone === 'error' ? '#ff6b6b' : '#6cf29c';
         toastEl.style.background = tone === 'error' ? 'rgba(255, 107, 107, 0.18)' : 'rgba(108, 242, 156, 0.18)';
         setTimeout(() => toastEl.classList.remove('show'), 2000);
+    }
+
+    function renderProgress(index) {
+        const progress = ((index) / (puzzleManager.puzzles.length - 1)) * 100;
+        progressFill.style.width = `${progress}%`;
+        if (progressValue) progressValue.textContent = `${Math.round(progress)}%`;
     }
 
     function renderPuzzle(index = 0) {
@@ -63,24 +59,18 @@ document.addEventListener('DOMContentLoaded', () => {
         puzzleStatus.textContent = activePuzzle.hint;
         dailyBadge.textContent = `Daily Generator · ${puzzleManager.dayIndex}`;
 
-        const progress = ((index) / (puzzleManager.puzzles.length - 1)) * 100;
-        progressFill.style.width = `${progress}%`;
-
+        renderProgress(index);
         simulation.loadPuzzle(activePuzzle);
-        engine.draw();
+        engine.render();
     }
 
     // Toolbar interactions
     const toolBtns = document.querySelectorAll('.tool-btn');
     toolBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Remove active class from all
             toolBtns.forEach(b => b.classList.remove('active'));
-            // Add to clicked
             btn.classList.add('active');
-
-            const type = btn.dataset.type;
-            engine.setTool(type);
+            engine.setTool(btn.dataset.type);
         });
     });
 
@@ -90,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('step-btn').addEventListener('click', () => simulation.step());
     document.getElementById('clear-btn').addEventListener('click', () => {
         simulation.clear();
-        engine.draw();
+        engine.render();
     });
 
     document.getElementById('save-btn').addEventListener('click', () => {
@@ -114,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = new FileReader();
             reader.onload = event => {
                 simulation.loadJSON(event.target.result);
-                engine.draw();
+                engine.render();
             };
             reader.readAsText(file);
         };
@@ -122,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('create-chip-btn').addEventListener('click', () => {
-        const name = prompt("Enter chip name:");
+        const name = prompt('Enter chip name:');
         if (!name) return;
 
         const def = simulation.createChip(name);
@@ -152,8 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (solved) {
             puzzleStatus.textContent = 'Solved! Load the next level to keep going.';
             showToast('Puzzle solved!');
-            const progress = ((currentLevelIndex + 1) / puzzleManager.puzzles.length) * 100;
-            progressFill.style.width = `${progress}%`;
+            renderProgress(currentLevelIndex + 1);
         } else {
             puzzleStatus.textContent = 'Not quite right yet. Check your truth table.';
             showToast('Outputs do not match the target yet.', 'error');
@@ -170,8 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             viewButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const mode = btn.dataset.mode;
-            engine.setRenderMode(mode);
+            engine.setRenderMode(btn.dataset.mode);
         });
     });
 
@@ -185,9 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Start the engine loop
+    // Phaser drives its own loop; keep API symmetry
     engine.start();
-
-    // Load the daily puzzle set
     renderPuzzle(0);
 });
