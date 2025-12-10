@@ -15,6 +15,22 @@
                 <div class="title">Binary Lab</div>
                 <div class="subtitle">Daily circuit puzzles</div>
             </header>
+            <div id="puzzle-panel" class="component-category">
+                <h3>Daily Puzzle</h3>
+                <div id="puzzle-meta">
+                    <div id="puzzle-day">Day</div>
+                    <div id="puzzle-level">Level</div>
+                </div>
+                <div id="puzzle-title">Loading...</div>
+                <p id="puzzle-desc">Procedurally generated objective based on today.</p>
+                <div id="truth-table"></div>
+                <div class="puzzle-actions">
+                    <button id="reset-puzzle-btn">Reset Puzzle</button>
+                    <button id="check-puzzle-btn">Check Solution</button>
+                    <button id="next-level-btn">Next Level</button>
+                </div>
+                <div id="puzzle-status"></div>
+            </div>
             <h2>Components</h2>
             <div class="component-category">
                 <h3>Sources</h3>
@@ -68,23 +84,6 @@
                 <button id="clear-btn">Clear All</button>
                 <button id="save-btn">Save</button>
                 <button id="load-btn">Load</button>
-            </div>
-
-            <div id="puzzle-panel" class="component-category">
-                <h3>Daily Puzzle</h3>
-                <div id="puzzle-meta">
-                    <div id="puzzle-day">Day</div>
-                    <div id="puzzle-level">Level</div>
-                </div>
-                <div id="puzzle-title">Loading...</div>
-                <p id="puzzle-desc">Procedurally generated objective based on today.</p>
-                <div id="truth-table"></div>
-                <div class="puzzle-actions">
-                    <button id="reset-puzzle-btn">Reset Puzzle</button>
-                    <button id="check-puzzle-btn">Check Solution</button>
-                    <button id="next-level-btn">Next Level</button>
-                </div>
-                <div id="puzzle-status"></div>
             </div>
         </div>
         <div id="canvas-container">

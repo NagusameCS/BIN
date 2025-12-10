@@ -49,6 +49,32 @@ export class Engine {
         };
     }
 
+    collectAnchors() {
+        const anchors = [];
+        this.simulation.components.forEach(c => {
+            c.getInputs().forEach(p => anchors.push({ x: p.x, y: p.y }));
+            c.getOutputs().forEach(p => anchors.push({ x: p.x, y: p.y }));
+        });
+        this.simulation.wires.forEach(w => {
+            anchors.push({ x: w.x1, y: w.y1 }, { x: w.x2, y: w.y2 });
+        });
+        return anchors;
+    }
+
+    snapToAnchor(pos, radius = 12) {
+        const anchors = this.collectAnchors();
+        let best = null;
+        let bestDist = Infinity;
+        anchors.forEach(a => {
+            const d = Math.hypot(a.x - pos.x, a.y - pos.y);
+            if (d < radius && d < bestDist) {
+                best = { x: a.x, y: a.y };
+                bestDist = d;
+            }
+        });
+        return best;
+    }
+
     handleMouseDown(e) {
         const pos = this.getGridPos(e);
 
@@ -67,8 +93,9 @@ export class Engine {
                 }
             }
         } else if (this.currentTool === 'Wire') {
-            this.wireStart = pos;
-            this.tempWireEnd = pos;
+            const snap = this.snapToAnchor(pos) || pos;
+            this.wireStart = snap;
+            this.tempWireEnd = snap;
         } else if (this.currentTool === 'Delete') {
             this.simulation.removeAt(pos.x, pos.y);
         } else {
@@ -87,7 +114,7 @@ export class Engine {
             this.selectedComponent.x = pos.x;
             this.selectedComponent.y = pos.y;
         } else if (this.currentTool === 'Wire' && this.wireStart) {
-            this.tempWireEnd = pos;
+            this.tempWireEnd = this.snapToAnchor(pos) || pos;
         }
 
         this.draw();
@@ -100,7 +127,8 @@ export class Engine {
             this.isDragging = false;
             this.selectedComponent = null;
         } else if (this.currentTool === 'Wire' && this.wireStart) {
-            this.simulation.addWire(this.wireStart.x, this.wireStart.y, pos.x, pos.y);
+            const end = this.snapToAnchor(pos) || pos;
+            this.simulation.addWire(this.wireStart.x, this.wireStart.y, end.x, end.y);
             this.wireStart = null;
             this.tempWireEnd = null;
         }
@@ -125,26 +153,11 @@ export class Engine {
         const height = this.canvas.height;
 
         // Clear
-        if (this.renderMode === 'wireframe') {
-            ctx.fillStyle = '#0b0f1f';
-            ctx.fillRect(0, 0, width, height);
-        } else {
-            const bg = ctx.createLinearGradient(0, 0, width, height);
-            bg.addColorStop(0, '#0c0f1a');
-            bg.addColorStop(1, '#121a2c');
-            ctx.fillStyle = bg;
-            ctx.fillRect(0, 0, width, height);
-
-            // Subtle spotlight to guide the build area
-            const radial = ctx.createRadialGradient(width * 0.45, height * 0.45, 60, width * 0.45, height * 0.45, width * 0.7);
-            radial.addColorStop(0, 'rgba(108,242,156,0.07)');
-            radial.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = radial;
-            ctx.fillRect(0, 0, width, height);
-        }
+        ctx.fillStyle = this.renderMode === 'wireframe' ? '#0b0f1f' : '#0e111a';
+        ctx.fillRect(0, 0, width, height);
 
         // Draw Grid
-        ctx.strokeStyle = this.renderMode === 'wireframe' ? '#30354a' : '#262c3b';
+        ctx.strokeStyle = this.renderMode === 'wireframe' ? '#30354a' : '#252a37';
         ctx.lineWidth = 1;
         ctx.beginPath();
         for (let x = 0; x <= width; x += this.gridSize) {
@@ -158,7 +171,7 @@ export class Engine {
         ctx.stroke();
 
         // Major gridlines every 5 units for easier placement
-        ctx.strokeStyle = this.renderMode === 'wireframe' ? 'rgba(122,163,255,0.35)' : 'rgba(108,242,156,0.15)';
+        ctx.strokeStyle = this.renderMode === 'wireframe' ? 'rgba(122,163,255,0.35)' : 'rgba(123,224,164,0.18)';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         const majorStep = this.gridSize * 5;
