@@ -1,4 +1,4 @@
-import Phaser from 'https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.esm.js';
+import * as Phaser from 'https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.esm.js';
 import { Wire } from './components.js';
 
 // Phaser-powered renderer and interaction layer for the circuit sandbox.
