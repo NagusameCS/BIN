@@ -10,110 +10,121 @@
 
 <body>
     <div id="app">
-        <div id="toolbar">
-            <header id="brand">
+        <header id="topbar">
+            <div class="brand-block">
                 <div class="title">Binary Lab</div>
-                <div class="subtitle">Daily circuit puzzles</div>
-            </header>
-            <div id="puzzle-panel" class="component-category">
-                <h3>Daily Puzzle</h3>
-                <div id="puzzle-meta">
-                    <div id="puzzle-day">Day</div>
-                    <div id="puzzle-level">Level</div>
+                <div class="subtitle">Circuit puzzles</div>
+            </div>
+            <div class="puzzle-inline">
+                <div class="pill" id="puzzle-day-inline">Day</div>
+                <div class="pill" id="puzzle-level-inline">Level</div>
+                <div id="puzzle-title-inline">Loading...</div>
+            </div>
+            <div class="actions-inline">
+                <div class="action-group">
+                    <button id="play-btn" class="ghost">Play</button>
+                    <button id="pause-btn" class="ghost">Pause</button>
+                    <button id="step-btn" class="ghost">Step</button>
                 </div>
-                <div id="puzzle-title">Loading...</div>
-                <p id="puzzle-desc">Procedurally generated objective based on today.</p>
-                <div id="truth-table"></div>
-                <div class="puzzle-actions">
-                    <button id="reset-puzzle-btn">Reset Puzzle</button>
-                    <button id="check-puzzle-btn">Check Solution</button>
-                    <button id="next-level-btn">Next Level</button>
+                <div class="action-group">
+                    <button id="save-btn" class="ghost">Save</button>
+                    <button id="load-btn" class="ghost">Load</button>
+                    <button id="clear-btn" class="ghost danger">Clear</button>
                 </div>
-                <div id="puzzle-status"></div>
-            </div>
-            <h2>Components</h2>
-            <div class="component-category">
-                <h3>Sources</h3>
-                <button class="tool-btn" data-type="VCC">VCC</button>
-                <button class="tool-btn" data-type="GND">GND</button>
-                <button class="tool-btn" data-type="Clock">Clock</button>
-            </div>
-            <div class="component-category">
-                <h3>Input</h3>
-                <button class="tool-btn" data-type="Switch">Switch</button>
-                <button class="tool-btn" data-type="Button">Button</button>
-            </div>
-            <div class="component-category">
-                <h3>Output</h3>
-                <button class="tool-btn" data-type="LED">LED</button>
-                <button class="tool-btn" data-type="Display">Display</button>
-            </div>
-            <div class="component-category">
-                <h3>Gates</h3>
-                <button class="tool-btn" data-type="AND">AND</button>
-                <button class="tool-btn" data-type="OR">OR</button>
-                <button class="tool-btn" data-type="NOT">NOT</button>
-                <button class="tool-btn" data-type="NAND">NAND</button>
-                <button class="tool-btn" data-type="NOR">NOR</button>
-                <button class="tool-btn" data-type="XOR">XOR</button>
-                <button class="tool-btn" data-type="XNOR">XNOR</button>
-            </div>
-            <div class="component-category">
-                <h3>Tools</h3>
-                <button class="tool-btn active" data-type="Select">Select</button>
-                <button class="tool-btn" data-type="Wire">Wire</button>
-                <button class="tool-btn" data-type="Delete">Delete</button>
-            </div>
-            <div class="component-category">
-                <h3>Custom</h3>
-                <button class="tool-btn" data-type="InputPin">Input Pin</button>
-                <button class="tool-btn" data-type="OutputPin">Output Pin</button>
-                <div id="custom-chips-container"></div>
-            </div>
-            <div class="component-category">
-                <h3>Boards</h3>
-                <button class="tool-btn" data-type="ProtoSmall">Protoboard S</button>
-                <button class="tool-btn" data-type="ProtoMedium">Protoboard M</button>
-                <button class="tool-btn" data-type="ProtoLarge">Protoboard L</button>
-            </div>
-            <div class="controls">
-                <button id="play-btn">Play</button>
-                <button id="pause-btn">Pause</button>
-                <button id="step-btn">Step</button>
-                <button id="create-chip-btn" style="width: 100%; background-color: #9C27B0;">Create Chip</button>
-                <button id="clear-btn">Clear All</button>
-                <button id="save-btn">Save</button>
-                <button id="load-btn">Load</button>
-            </div>
-        </div>
-        <div id="canvas-container">
-            <div id="hud">
-                <div>
-                    <div class="badge" id="daily-badge">Daily Generator</div>
-                    <div id="hud-title">Build the circuit, light the board.</div>
-                </div>
-                <div id="progress-track">
-                    <div class="progress-label">Level Progress</div>
-                    <div class="progress-bar"><span id="progress-fill"></span></div>
-                </div>
-                <div id="view-toggle">
-                    <div class="progress-label">View Mode</div>
-                    <div class="segmented">
+                <div class="action-group">
+                    <div id="view-toggle" class="segmented mini">
                         <button data-mode="real" class="seg-btn active">Real</button>
                         <button data-mode="wireframe" class="seg-btn">Wireframe</button>
                     </div>
-                </div>
-                <div id="theme-toggle">
-                    <div class="progress-label">Colorway</div>
-                    <div class="segmented trio">
+                    <div id="theme-toggle" class="segmented mini trio">
                         <button data-theme="neon" class="seg-btn active">Neon</button>
                         <button data-theme="sunset" class="seg-btn">Sunset</button>
                         <button data-theme="blueprint" class="seg-btn">Blueprint</button>
                     </div>
                 </div>
             </div>
-            <canvas id="circuit-canvas"></canvas>
-            <div id="toast"></div>
+        </header>
+        <div id="layout">
+            <aside id="sidebar">
+                <div class="component-category">
+                    <h3>Tools</h3>
+                    <button class="tool-btn active" data-type="Select">Select</button>
+                    <button class="tool-btn" data-type="Wire">Wire</button>
+                    <button class="tool-btn" data-type="Delete">Delete</button>
+                </div>
+                <div class="component-category">
+                    <h3>Sources</h3>
+                    <button class="tool-btn" data-type="VCC">VCC</button>
+                    <button class="tool-btn" data-type="GND">GND</button>
+                    <button class="tool-btn" data-type="Clock">Clock</button>
+                </div>
+                <div class="component-category">
+                    <h3>Input</h3>
+                    <button class="tool-btn" data-type="Switch">Switch</button>
+                    <button class="tool-btn" data-type="Button">Button</button>
+                </div>
+                <div class="component-category">
+                    <h3>Output</h3>
+                    <button class="tool-btn" data-type="LED">LED</button>
+                    <button class="tool-btn" data-type="Display">Display</button>
+                </div>
+                <div class="component-category">
+                    <h3>Gates</h3>
+                    <button class="tool-btn" data-type="AND">AND</button>
+                    <button class="tool-btn" data-type="OR">OR</button>
+                    <button class="tool-btn" data-type="NOT">NOT</button>
+                    <button class="tool-btn" data-type="NAND">NAND</button>
+                    <button class="tool-btn" data-type="NOR">NOR</button>
+                    <button class="tool-btn" data-type="XOR">XOR</button>
+                    <button class="tool-btn" data-type="XNOR">XNOR</button>
+                </div>
+                <div class="component-category">
+                    <h3>Boards</h3>
+                    <button class="tool-btn" data-type="ProtoSmall">Protoboard S</button>
+                    <button class="tool-btn" data-type="ProtoMedium">Protoboard M</button>
+                    <button class="tool-btn" data-type="ProtoLarge">Protoboard L</button>
+                </div>
+                <div class="component-category">
+                    <h3>Custom</h3>
+                    <button class="tool-btn" data-type="InputPin">Input Pin</button>
+                    <button class="tool-btn" data-type="OutputPin">Output Pin</button>
+                    <button id="create-chip-btn" class="tool-btn">Create Chip</button>
+                    <div id="custom-chips-container"></div>
+                </div>
+            </aside>
+            <main id="workspace">
+                <section id="canvas-shell">
+                    <div id="hud">
+                        <div class="badge" id="daily-badge">Daily Generator</div>
+                        <div id="hud-title">Build, test, iterate.</div>
+                    </div>
+                    <canvas id="circuit-canvas"></canvas>
+                    <div id="toast"></div>
+                </section>
+            </main>
+            <aside id="info-panel">
+                <div id="puzzle-panel" class="component-category">
+                    <h3>Puzzle</h3>
+                    <div id="puzzle-meta">
+                        <div id="puzzle-day">Day</div>
+                        <div id="puzzle-level">Level</div>
+                    </div>
+                    <div id="puzzle-title">Loading...</div>
+                    <p id="puzzle-desc">Procedurally generated objective based on today.</p>
+                    <div id="truth-table"></div>
+                    <div class="puzzle-actions">
+                        <button id="reset-puzzle-btn">Reset Puzzle</button>
+                        <button id="check-puzzle-btn">Check Solution</button>
+                        <button id="next-level-btn">Next Level</button>
+                    </div>
+                    <div id="puzzle-status"></div>
+                </div>
+                <div class="component-category">
+                    <h3>Progress</h3>
+                    <div class="progress-label">Level Progress</div>
+                    <div class="progress-bar"><span id="progress-fill"></span></div>
+                </div>
+            </aside>
         </div>
     </div>
 
