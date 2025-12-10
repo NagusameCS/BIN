@@ -9,43 +9,46 @@
 </head>
 
 <body>
-    <div id="app">
-        <header id="topbar">
-            <div class="brand-block">
-                <div class="title">Binary Lab</div>
-                <div class="subtitle">Circuit puzzles</div>
-            </div>
-            <div class="puzzle-inline">
-                <div class="pill" id="puzzle-day-inline">Day</div>
-                <div class="pill" id="puzzle-level-inline">Level</div>
-                <div id="puzzle-title-inline">Loading...</div>
-            </div>
-            <div class="actions-inline">
-                <div class="action-group">
-                    <button id="play-btn" class="ghost">Play</button>
-                    <button id="pause-btn" class="ghost">Pause</button>
-                    <button id="step-btn" class="ghost">Step</button>
+    <div class="app-shell">
+        <header class="nav-bar">
+            <div class="brand">
+                <div class="mark"></div>
+                <div class="brand-text">
+                    <div class="name">Binary Lab</div>
+                    <div class="tagline">Daily circuit puzzles</div>
                 </div>
-                <div class="action-group">
-                    <button id="save-btn" class="ghost">Save</button>
-                    <button id="load-btn" class="ghost">Load</button>
-                    <button id="clear-btn" class="ghost danger">Clear</button>
+            </div>
+            <div class="nav-puzzle">
+                <div class="pill-row">
+                    <span class="pill" id="puzzle-day-inline">Day</span>
+                    <span class="pill ghost" id="puzzle-level-inline">Level</span>
                 </div>
-                <div class="action-group">
-                    <div id="view-toggle" class="segmented mini">
-                        <button data-mode="real" class="seg-btn active">Real</button>
-                        <button data-mode="wireframe" class="seg-btn">Wireframe</button>
-                    </div>
-                    <div id="theme-toggle" class="segmented mini trio">
-                        <button data-theme="neon" class="seg-btn active">Neon</button>
-                        <button data-theme="sunset" class="seg-btn">Sunset</button>
-                        <button data-theme="blueprint" class="seg-btn">Blueprint</button>
-                    </div>
+                <div class="nav-title">
+                    <div id="puzzle-title-inline">Loading...</div>
+                    <small>Wire, test, and satisfy the table.</small>
+                </div>
+            </div>
+            <div class="nav-controls">
+                <div class="seg-control" id="view-toggle">
+                    <button data-mode="real" class="seg-btn active">Real</button>
+                    <button data-mode="wireframe" class="seg-btn">Wire</button>
+                </div>
+                <div class="seg-control trio" id="theme-toggle">
+                    <button data-theme="neon" class="seg-btn active">Neon</button>
+                    <button data-theme="sunset" class="seg-btn">Sunset</button>
+                    <button data-theme="blueprint" class="seg-btn">Blueprint</button>
+                </div>
+                <div class="nav-actions">
+                    <button id="save-btn" class="chip">Save</button>
+                    <button id="load-btn" class="chip">Load</button>
+                    <button id="clear-btn" class="chip danger">Clear</button>
                 </div>
             </div>
         </header>
-        <div id="layout">
-            <aside id="sidebar">
+
+        <div class="workspace-grid">
+            <aside id="sidebar" class="panel palette">
+                <div class="panel-heading">Palette</div>
                 <div class="component-category">
                     <h3>Tools</h3>
                     <button class="tool-btn active" data-type="Select">Select</button>
@@ -92,36 +95,53 @@
                     <div id="custom-chips-container"></div>
                 </div>
             </aside>
-            <main id="workspace">
-                <section id="canvas-shell">
-                    <div id="hud">
-                        <div class="badge" id="daily-badge">Daily Generator</div>
-                        <div id="hud-title">Build, test, iterate.</div>
+
+            <main id="workspace" class="panel stage">
+                <section class="hero">
+                    <div class="badge" id="daily-badge">Daily Generator</div>
+                    <div class="hero-copy">
+                        <div class="eyebrow">Build, test, iterate.</div>
+                        <div class="title" id="hud-title">Circuit sand table</div>
+                        <p>Place sources, wire gates, and watch the simulation respond in real time.</p>
                     </div>
-                    <canvas id="circuit-canvas"></canvas>
+                    <div class="hero-controls">
+                        <button id="play-btn" class="cta">Play</button>
+                        <button id="pause-btn" class="ghost-btn">Pause</button>
+                        <button id="step-btn" class="ghost-btn">Step</button>
+                    </div>
+                </section>
+
+                <section id="canvas-shell" class="canvas-shell">
+                    <div id="canvas-container" class="canvas-frame">
+                        <canvas id="circuit-canvas"></canvas>
+                    </div>
                     <div id="toast"></div>
                 </section>
             </main>
-            <aside id="info-panel">
-                <div id="puzzle-panel" class="component-category">
-                    <h3>Puzzle</h3>
-                    <div id="puzzle-meta">
-                        <div id="puzzle-day">Day</div>
-                        <div id="puzzle-level">Level</div>
+
+            <aside id="info-panel" class="panel info">
+                <div class="panel-heading">Puzzle Brief</div>
+                <div id="puzzle-panel" class="card">
+                    <div class="meta-line">
+                        <span id="puzzle-day" class="pill">Day</span>
+                        <span id="puzzle-level" class="pill ghost">Level</span>
                     </div>
-                    <div id="puzzle-title">Loading...</div>
+                    <div id="puzzle-title" class="card-title">Loading...</div>
                     <p id="puzzle-desc">Procedurally generated objective based on today.</p>
-                    <div id="truth-table"></div>
+                    <div id="truth-table" class="table-block"></div>
                     <div class="puzzle-actions">
-                        <button id="reset-puzzle-btn">Reset Puzzle</button>
-                        <button id="check-puzzle-btn">Check Solution</button>
-                        <button id="next-level-btn">Next Level</button>
+                        <button id="reset-puzzle-btn">Reset</button>
+                        <button id="check-puzzle-btn">Check</button>
+                        <button id="next-level-btn">Next</button>
                     </div>
-                    <div id="puzzle-status"></div>
+                    <div id="puzzle-status" class="status"></div>
                 </div>
-                <div class="component-category">
-                    <h3>Progress</h3>
-                    <div class="progress-label">Level Progress</div>
+
+                <div class="card">
+                    <div class="progress-header">
+                        <div class="label">Level Progress</div>
+                        <div class="value" id="progress-value"></div>
+                    </div>
                     <div class="progress-bar"><span id="progress-fill"></span></div>
                 </div>
             </aside>
