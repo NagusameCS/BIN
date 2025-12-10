@@ -281,7 +281,8 @@ font-size: 0.8rem;
 
 .cta {
     background: linear-gradient(135deg, var(--accent) 0%, #f2b04d 100%);
-    color: #0a0d14;
+    overflow: hidden;
+    overscroll-behavior: none;
     border: none;
 }
 

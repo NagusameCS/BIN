@@ -42,7 +42,7 @@ export class Engine {
             width,
             height,
             resolution: window.devicePixelRatio || 1,
-            antialias: true,
+            render: { antialias: false, pixelArt: true, roundPixels: true },
             backgroundColor: '#0a0d14',
             scene: {
                 create() {
@@ -278,34 +278,34 @@ export class Engine {
             const x = comp.x - w / 2;
             const y = comp.y - h / 2;
             const isLocked = comp.locked;
-            const baseColor = this.renderMode === 'wireframe' ? 0x0f1524 : (isLocked ? 0x1c2e35 : 0x243448);
-            const strokeColor = isLocked ? 0x6cf29c : 0xb7c7ff;
-            g.fillStyle(baseColor, 0.95);
-            g.lineStyle(isLocked ? 2.4 : 2, strokeColor, 0.9);
+            const baseColor = this.renderMode === 'wireframe' ? 0x12192b : (isLocked ? 0x1f3344 : 0x2d4460);
+            const strokeColor = isLocked ? 0x7fe0a6 : 0xc8d9ff;
+            g.fillStyle(baseColor, 0.98);
+            g.lineStyle(isLocked ? 3 : 2.4, strokeColor, 0.95);
             g.fillRoundedRect(x, y, w, h, 8);
             g.strokeRoundedRect(x, y, w, h, 8);
 
             // Pins
-            const pinActive = this.renderMode === 'wireframe' ? 0x9fb5ff : 0x9cf7c8;
-            const pinInactive = this.renderMode === 'wireframe' ? 0x5a6a8a : 0x3a4255;
+            const pinActive = this.renderMode === 'wireframe' ? 0xb3c8ff : 0x9cf7c8;
+            const pinInactive = this.renderMode === 'wireframe' ? 0x6b7794 : 0x4b566d;
             comp.getInputs().forEach(pin => {
                 g.fillStyle(pinInactive, 1);
-                g.fillCircle(pin.x, pin.y, 4);
+                g.fillCircle(pin.x, pin.y, 5);
             });
             comp.getOutputs().forEach(pin => {
                 const active = !!pin.value;
-                g.fillStyle(active ? (this.renderMode === 'wireframe' ? 0x9fb5ff : 0x9cf7c8) : pinInactive, 1);
-                g.fillCircle(pin.x, pin.y, 4.5);
+                g.fillStyle(active ? pinActive : pinInactive, 1);
+                g.fillCircle(pin.x, pin.y, 5.5);
             });
 
             // Label text
             if (this.scene) {
-                const label = this.scene.add.text(comp.x, comp.y, comp.type, {
+                const label = this.scene.add.text(comp.x, comp.y, comp.label || comp.type, {
                     fontFamily: 'JetBrains Mono, monospace',
                     fontSize: '12px',
-                    color: '#e6edf7',
+                    color: '#f0f4ff',
                     stroke: '#0a0d14',
-                    strokeThickness: 3
+                    strokeThickness: 4
                 }).setOrigin(0.5);
                 this.labels.push(label);
             }

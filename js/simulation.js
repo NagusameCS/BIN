@@ -156,10 +156,13 @@ export class Simulation {
     loadPuzzle(puzzle) {
         this.clear();
         this.currentPuzzle = puzzle;
-        const baseXLeft = 140;
-        const baseXRight = 760;
-        const spacing = Math.max(70, 360 / Math.max(1, puzzle.inputs.length));
-        const startY = 160;
+        const vw = Math.max(900, window.innerWidth || 900);
+        const vh = Math.max(620, window.innerHeight || 620);
+        const gutter = 120;
+        const baseXLeft = Math.max(120, Math.round(vw * 0.22));
+        const baseXRight = Math.min(vw - gutter, Math.round(vw * 0.72));
+        const spacing = Math.max(70, (vh - 260) / Math.max(1, puzzle.inputs.length));
+        const startY = 140;
 
         // Drop a locked protoboard that matches the base plate if provided.
         if (puzzle.basePlate) {
